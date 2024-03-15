@@ -1,8 +1,10 @@
 from typing import Tuple
 
 import numpy as np
+import numba as nb
 
 
+@nb.njit
 def qubit_coh_noise(
     qubit_id: int,
     phi: float,
@@ -64,6 +66,7 @@ def qubit_coh_noise(
     return a, b, d
 
 
+@nb.njit
 def ideal_parity(
     qubit_ids: Tuple[int, int],
     synd: int,
@@ -112,6 +115,7 @@ def ideal_parity(
     return noisy_parity(qubit_ids=qubit_ids, synd=synd, phi=0, num_qubits=num_qubits)
 
 
+@nb.njit
 def noisy_parity(
     qubit_ids: Tuple[int, int],
     phi: float,
@@ -159,7 +163,7 @@ def noisy_parity(
     likelihood decoding in the surface code."
     Physical Review A 90.3 (2014): 032326.
     """
-    assert np.abs(np.diff(qubit_ids)) == 1
+    assert np.abs(qubit_ids[1] - qubit_ids[0]) == 1
     qubit_id = min(qubit_ids)
 
     a = np.zeros((2 * num_qubits, 2 * num_qubits))

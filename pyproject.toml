@@ -17,9 +17,8 @@ license = {file = "LICENSE"}
 readme = "README.md"
 dependencies = [
     "numpy",
-    "scipy",
-    "matplotlib",
     "pyyaml",
+    "numba",
 ]
 keywords = ["fermion", "fgs", "fgo", "simulator", "qec"]
 

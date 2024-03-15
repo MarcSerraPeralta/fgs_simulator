@@ -1,8 +1,10 @@
 from typing import Tuple
 
 import numpy as np
+import numba as nb
 
 
+@nb.njit()
 def apply_op(
     in_state: Tuple[np.ndarray, float],
     operator: Tuple[np.ndarray, np.ndarray, np.ndarray, float],
@@ -51,6 +53,7 @@ def apply_op(
     return out_cov, out_norm
 
 
+@nb.njit()
 def inner_product(
     state_1: Tuple[np.ndarray, float],
     state_2: Tuple[np.ndarray, float],
@@ -97,6 +100,7 @@ def inner_product(
     return norm
 
 
+@nb.njit()
 def check_pure_state(state: Tuple[np.ndarray, float], **kargs):
     """
     Checks if the given FGS is a pure FGS.
