@@ -19,6 +19,7 @@ dependencies = [
     "numpy",
     "pyyaml",
     "numba",
+    "xarray",
 ]
 keywords = ["fermion", "fgs", "fgo", "simulator", "qec"]
 
