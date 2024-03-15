@@ -34,9 +34,11 @@ def memory_experiment(
     syndromes = []
 
     for _ in range(num_rounds):
+        state = model.idle(state)
         state, syndrome = model.qec_round(state)
         syndromes.append(syndrome)
 
+    state = model.idle(state)
     state, syndrome = model.final_qec_round(state)
     syndromes.append(syndrome)
 

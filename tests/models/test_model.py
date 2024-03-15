@@ -5,7 +5,7 @@ from fgs_sim import Model
 
 
 def test_model():
-    model = Model(1, qubit_line=["D1", "A1", "D2", "A2", "D3"])
+    model = Model(None, qubit_line=["D1", "A1", "D2", "A2", "D3"])
     data_init = {"D1": 0, "D2": 0, "D3": 0}
     num_rounds = 10
 

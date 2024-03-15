@@ -8,26 +8,22 @@ from ..core import apply_op
 
 
 class IncNoiseModel(Model):
-    def qec_round(
-        self, state: Tuple[np.ndarray, float]
-    ) -> Tuple[Tuple[np.ndarray, float], np.ndarray]:
+    def idle(self, state: Tuple[np.ndarray, float]) -> Tuple[np.ndarray, float]:
         """
-        Returns the syndrome from a noisy QEC round given an FGS.
+        Returns the FGS after noisy idling given an FGS.
         The noise corresponds to adding rotations to the data qubits
-        as specified in the `Model.setup` before the QEC round.
+        as specified in the `Model.setup` as `idle`.
         The algorithm is based on Ref. [1].
 
         Paramters
         ---------
         state
-            FGS before the (noisy) QEC round.
+            FGS before the (noisy) idling.
 
         Returns
         -------
         out_state
-            FGS after the (noisy) QEC round.
-        synd
-            Syndrome outcome vector measured in the QEC round.
+            FGS after the (noisy) idling.
 
         References
         ----------
@@ -36,14 +32,13 @@ class IncNoiseModel(Model):
         Physical review letters 119.19 (2017): 190503.
         """
         for qubit in self.data_qubits:
-            phi = 0.2
-            c = 1
+            params = self.setup.param("idle", qubit)
             matrices = qubit_coh_noise(
                 qubit_id=self.qubit_id(qubit),
-                phi=phi,
+                phi=params["phi"],
                 num_qubits=self.num_data + 1,
             )
-            g_norm = 0.5 * (1 + c)
+            g_norm = 0.5 * (1 + params["c"])
             state = apply_op(state, (*matrices, g_norm))
 
-        return super().qec_round(state)
+        return state

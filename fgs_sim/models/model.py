@@ -164,7 +164,7 @@ class Model:
         self, state: Tuple[np.ndarray, float]
     ) -> Tuple[Tuple[np.ndarray, float], np.ndarray]:
         """
-        Returns the syndrome from an ideal final QEC round given an FGS.
+        Returns the state and measured syndrome from an ideal final QEC round given an FGS.
         The algorithm is based on Ref. [1].
 
         Paramters
@@ -223,7 +223,7 @@ class Model:
         self, state: Tuple[np.ndarray, float]
     ) -> Tuple[Tuple[np.ndarray, float], np.ndarray]:
         """
-        Returns the syndrome from an ideal QEC round given an FGS.
+        Returns the state and measured syndrome from an ideal QEC round given an FGS.
         The algorithm is based on Ref. [1].
 
         Paramters
@@ -257,6 +257,11 @@ class Model:
                 num_qubits=self.num_data + 1,
             )
             prob_0 = 0.5 * np.sqrt(np.linalg.det(in_cov - d_0))
+            # numerical issue where `prob_0 = 1.00000000001.. > 1`
+            if prob_0 > 1 and prob_0 < 1 + 1e-6:
+                prob_0 = 1
+            if prob_0 < 0 and prob_0 > -1e-6:
+                prob_0 = 0
 
             # sample syndrome from prob_0
             synd = np.random.choice([0, 1], p=[prob_0, 1 - prob_0])
@@ -272,3 +277,19 @@ class Model:
             state = apply_op(state, (*matrices, 0.5))
 
         return state, np.array(synd_vector)
+
+    def idle(self, state: Tuple[np.ndarray, float]) -> Tuple[np.ndarray, float]:
+        """
+        Returns the state after ideal idling (i.e. doing nothing).
+
+        Paramters
+        ---------
+        state
+            FGS before the idling.
+
+        Returns
+        -------
+        out_state
+            FGS after the idling.
+        """
+        return state
