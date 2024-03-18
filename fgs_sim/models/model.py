@@ -3,7 +3,7 @@ from typing import List, Dict, Tuple
 import numpy as np
 
 from .kraus import ideal_parity
-from ..core import apply_op
+from ..core import apply_op, get_prob_kraus
 
 
 class Model:
@@ -122,17 +122,17 @@ class Model:
 
         cov[0, -1] = -1
         cov[-1, 0] = +1
-        for i in range(2 * self.num_data - 1):
-            cov[i + 1, i + 2] = -1
-            cov[i + 2, i + 1] = +1
+        for i in range(self.num_data):
+            cov[2 * i + 1, 2 * i + 2] = -1
+            cov[2 * i + 2, 2 * i + 1] = +1
 
         return cov, norm
 
     def log_meas(self, state: Tuple[np.ndarray, float]) -> float:
         """
-        Returns the posterior probability of having a logical errors,
-        meaning the probability that the initial logical state is not the same
-        as the measured one given the observed syndromes.
+        Returns the posterior probability of having a logical errors given an
+        (unnormalized) FGS, meaning the probability that the initial logical
+        state is not the same as the measured one given the observed syndromes.
 
         The used expression is Eq. S4 from Ref. [1].
 
@@ -170,12 +170,12 @@ class Model:
         Paramters
         ---------
         state
-            FGS before the final QEC round.
+            Unnormalized FGS before the final QEC round.
 
         Returns
         -------
         out_state
-            FGS after the final QEC round.
+            Unnormalized FGS after the final QEC round.
         synd
             Syndrome outcome vector measured in the final QEC round.
 
@@ -191,18 +191,13 @@ class Model:
             qubit_ids = [self.qubit_id(q) for q in qubits]
 
             # get probability of syndrome=0
-            in_cov, in_norm = state
-            _, _, d_0 = ideal_parity(
+            kraus = ideal_parity(
                 qubit_ids=qubit_ids,
                 synd=0,
                 num_qubits=self.num_data + 1,
             )
-            prob_0 = 0.5 * np.sqrt(np.linalg.det(in_cov - d_0))
-            # numerical issue where `prob_0 = 1.00000000001.. > 1`
-            if prob_0 > 1 and prob_0 < 1 + 1e-6:
-                prob_0 = 1
-            if prob_0 < 0 and prob_0 > -1e-6:
-                prob_0 = 0
+            c = 0.5
+            prob_0 = get_prob_kraus(state, (*kraus, c))
 
             # sample syndrome from prob_0
             synd = np.random.choice([0, 1], p=[prob_0, 1 - prob_0])
@@ -215,7 +210,8 @@ class Model:
                 synd=synd,
                 num_qubits=self.num_data + 1,
             )
-            state = apply_op(state, (*matrices, 0.5))
+            c = 0.5
+            state = apply_op(state, (*matrices, c))
 
         return state, np.array(synd_vector)
 
@@ -250,18 +246,13 @@ class Model:
             qubit_ids = [self.qubit_id(q) for q in qubits]
 
             # get probability of syndrome=0
-            in_cov, in_norm = state
-            _, _, d_0 = ideal_parity(
+            kraus = ideal_parity(
                 qubit_ids=qubit_ids,
                 synd=0,
                 num_qubits=self.num_data + 1,
             )
-            prob_0 = 0.5 * np.sqrt(np.linalg.det(in_cov - d_0))
-            # numerical issue where `prob_0 = 1.00000000001.. > 1`
-            if prob_0 > 1 and prob_0 < 1 + 1e-6:
-                prob_0 = 1
-            if prob_0 < 0 and prob_0 > -1e-6:
-                prob_0 = 0
+            c = 0.5
+            prob_0 = get_prob_kraus(state, (*kraus, c))
 
             # sample syndrome from prob_0
             synd = np.random.choice([0, 1], p=[prob_0, 1 - prob_0])
@@ -274,7 +265,8 @@ class Model:
                 synd=synd,
                 num_qubits=self.num_data + 1,
             )
-            state = apply_op(state, (*matrices, 0.5))
+            c = 0.5
+            state = apply_op(state, (*matrices, c))
 
         return state, np.array(synd_vector)
 
