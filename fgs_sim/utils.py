@@ -12,6 +12,7 @@ def dataset_generator(
     num_rounds: int,
     data_init: Dict[str, bool],
     num_samples: int,
+    verbose: bool = True,
 ):
     """
     Samples the experiment `num_samples` times and returns the results in
@@ -28,6 +29,9 @@ def dataset_generator(
         Number of QEC rounds in the experiment
     num_samples
         Number of samples to take.
+    verbose
+        If True, prints status bar of the dataset generation.
+        Default: True.
 
     Returns
     -------
@@ -36,13 +40,18 @@ def dataset_generator(
     """
     list_syndromes = []
     list_log_error_post = []
+    idx_percent = num_samples // 100
     for i in range(num_samples):
+        if verbose and (i % idx_percent == 0):
+            print(f"\r{i // idx_percent}%", end="", flush=True)
+
         syndromes, log_error_post = experiment(
             model=model, num_rounds=num_rounds, data_init=data_init
         )
 
         list_syndromes.append(syndromes)
         list_log_error_post.append(log_error_post)
+    print("\r100%", flush=True)
 
     ds = xr.Dataset(
         data_vars=dict(

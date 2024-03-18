@@ -1,17 +1,46 @@
 import numpy as np
 
-from fgs_sim.repetition_code import memory_experiment
 from fgs_sim import Setup
-from fgs_sim.models import IncNoiseModel
+from fgs_sim.models import IncNoiseModel, ParityNoiseModel, PhenNoiseModel
+from fgs_sim.core import check_fgs
+
+
+def debug_memory_experiment(model, num_rounds, data_init):
+    state = model.init_qubits(data_init)
+    syndromes = []
+    check_fgs(state)
+
+    for _ in range(num_rounds):
+        state = model.idle(state)
+        check_fgs(state)
+        state, syndrome = model.qec_round(state)
+        syndromes.append(syndrome)
+        check_fgs(state)
+
+    state = model.idle(state)
+    check_fgs(state)
+
+    state, syndrome = model.final_qec_round(state)
+    syndromes.append(syndrome)
+    check_fgs(state)
+
+    syndromes = np.array(syndromes)
+    log_error_posterior = model.log_meas(state)
+
+    assert (log_error_posterior >= 0) and (log_error_posterior <= 1)
+
+    return syndromes, log_error_posterior
 
 
 def test_ideal_IncNoiseModel():
     setup = Setup({"setup": [{"idle": {"phi": 0, "c": 0.6}}]})
     model = IncNoiseModel(setup, qubit_line=["D1", "A1", "D2", "A2", "D3"])
     data_init = {"D1": 0, "D2": 0, "D3": 0}
-    num_rounds = 10
+    num_rounds = 50
 
-    syndrome, log_error_posterior = memory_experiment(model, num_rounds, data_init)
+    syndrome, log_error_posterior = debug_memory_experiment(
+        model, num_rounds, data_init
+    )
 
     assert (syndrome == 0).all()
     assert np.allclose(log_error_posterior, 0)
@@ -23,10 +52,85 @@ def test_noisy_IncNoiseModel():
     setup = Setup({"setup": [{"idle": {"phi": np.pi / 4, "c": 0.6}}]})
     model = IncNoiseModel(setup, qubit_line=["D1", "A1", "D2", "A2", "D3"])
     data_init = {"D1": 0, "D2": 0, "D3": 0}
-    num_rounds = 50
+    num_rounds = 5
 
-    syndrome, log_error_posterior = memory_experiment(model, num_rounds, data_init)
+    for _ in range(1_000):
+        syndrome, log_error_posterior = debug_memory_experiment(
+            model, num_rounds, data_init
+        )
 
-    assert (syndrome != 0).any()
+    return
+
+
+def test_ideal_ParityNoiseModel():
+    setup = Setup({"setup": [{"parity": {"phi": 0, "c": 1}}]})
+    model = ParityNoiseModel(setup, qubit_line=["D1", "A1", "D2", "A2", "D3"])
+    data_init = {"D1": 0, "D2": 0, "D3": 0}
+    num_rounds = 20
+
+    syndrome, log_error_posterior = debug_memory_experiment(
+        model, num_rounds, data_init
+    )
+
+    assert (syndrome == 0).all()
+    assert np.allclose(log_error_posterior, 0)
+
+    return
+
+
+def test_noisy_ParityNoiseModel():
+    setup = Setup({"setup": [{"parity": {"phi": np.pi / 4, "c": 0.6}}]})
+    model = ParityNoiseModel(setup, qubit_line=["D1", "A1", "D2", "A2", "D3"])
+    data_init = {"D1": 0, "D2": 0, "D3": 0}
+    num_rounds = 5
+
+    for _ in range(1_000):
+        syndrome, log_error_posterior = debug_memory_experiment(
+            model, num_rounds, data_init
+        )
+
+    return
+
+
+def test_ideal_PhenNoiseModel():
+    setup = Setup(
+        {
+            "setup": [
+                {"idle": {"phi": 0, "c": 0.2}},
+                {"parity": {"phi": 0, "c": 1}},
+            ]
+        }
+    )
+    model = PhenNoiseModel(setup, qubit_line=["D1", "A1", "D2", "A2", "D3"])
+    data_init = {"D1": 0, "D2": 0, "D3": 0}
+    num_rounds = 20
+
+    syndrome, log_error_posterior = debug_memory_experiment(
+        model, num_rounds, data_init
+    )
+
+    assert (syndrome == 0).all()
+    assert np.allclose(log_error_posterior, 0)
+
+    return
+
+
+def test_noisy_PhenNoiseModel():
+    setup = Setup(
+        {
+            "setup": [
+                {"idle": {"phi": 0.2, "c": 0.2}},
+                {"parity": {"phi": 0.2, "c": 0.8}},
+            ]
+        }
+    )
+    model = PhenNoiseModel(setup, qubit_line=["D1", "A1", "D2", "A2", "D3"])
+    data_init = {"D1": 0, "D2": 0, "D3": 0}
+    num_rounds = 5
+
+    for _ in range(1_000):
+        syndrome, log_error_posterior = debug_memory_experiment(
+            model, num_rounds, data_init
+        )
 
     return

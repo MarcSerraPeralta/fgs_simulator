@@ -3,6 +3,7 @@ from typing import Dict, Tuple
 import numpy as np
 
 from .models import Model
+from .core import check_fgs
 
 
 def memory_experiment(
@@ -24,6 +25,26 @@ def memory_experiment(
     not as a sequence of gates. Therefore, the different implementations of the
     partity checks are not important and these differences can be taken into account
     in the noise model.
+
+    Parameters
+    ----------
+    model
+        Noise model with `idle` and `qec_round` blocks.
+    num_rounds
+        Number of QEC rounds to run.
+    data_init
+        Dictionary specifying the initial state of the data qubits.
+        Note that for the FGS simulation to be efficient, the data qubits are
+        initialized in a superposition of `data_init` and the oposite of `data_init`.
+
+    Returns
+    -------
+    syndrome: np.ndarray(num_rounds + 1)
+        Syndrome outcomes including the final round.
+    log_error_posterior
+        Posterior logical error probability given the observed syndromes.
+        Note that this is the average logical error probability of `data_init`
+        and the oposite of `data_init`.
     """
     if not isinstance(num_rounds, int):
         raise ValueError(f"num_rounds expected as int, got {type(num_rounds)} instead.")
@@ -35,10 +56,12 @@ def memory_experiment(
 
     for _ in range(num_rounds):
         state = model.idle(state)
+
         state, syndrome = model.qec_round(state)
         syndromes.append(syndrome)
 
     state = model.idle(state)
+
     state, syndrome = model.final_qec_round(state)
     syndromes.append(syndrome)
 
