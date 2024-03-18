@@ -12,7 +12,7 @@ def dataset_generator(
     num_rounds: int,
     data_init: Dict[str, bool],
     num_samples: int,
-    verbose: bool = False,
+    verbose: bool = True,
 ):
     """
     Samples the experiment `num_samples` times and returns the results in
@@ -31,6 +31,7 @@ def dataset_generator(
         Number of samples to take.
     verbose
         If True, prints status bar of the dataset generation.
+        Default: True.
 
     Returns
     -------
@@ -50,6 +51,7 @@ def dataset_generator(
 
         list_syndromes.append(syndromes)
         list_log_error_post.append(log_error_post)
+    print("\r100%", flush=True)
 
     ds = xr.Dataset(
         data_vars=dict(

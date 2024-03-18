@@ -16,10 +16,7 @@ def apply_op(
     FGS = Fermionic Gaussian State
     FGM = Fermionic Gaussian Map
 
-    The algorithm is based on Refs. [1-3]. Note that Eqs. S1 and S2 from Ref. [1] and
-    Eqs. 31 and 32 from Ref. [3] are not the same as Eqs. 45 and 47 of Ref. [2].
-    The equations used in this function are from Ref. [2] because they lead to
-    physical probabilities, while the ones from Ref. [1] do not.
+    The algorithm is based on Refs. [1-3].
 
     Parameters
     ----------
@@ -49,10 +46,8 @@ def apply_op(
     in_cov, in_norm = in_state
     a, b, d, c = operator
 
-    tmp = np.identity(in_cov.shape[0]) + in_cov @ d
-
-    out_cov = a + b @ np.linalg.inv(tmp) @ in_cov @ b.T
-    out_norm = c * np.sqrt(np.linalg.det(tmp)) * in_norm
+    out_cov = a - b @ np.linalg.inv(in_cov - d) @ b.T
+    out_norm = c * np.sqrt(np.linalg.det(in_cov - d)) * in_norm
 
     return out_cov, out_norm
 
@@ -69,10 +64,7 @@ def get_prob_kraus(
     FGS = Fermionic Gaussian State
     FGM = Fermionic Gaussian Map
 
-    The algorithm is based on Refs. [1-3]. Note that Eqs. S1 and S2 from Ref. [1] and
-    Eqs. 31 and 32 from Ref. [3] are not the same as Eqs. 45 and 47 of Ref. [2].
-    The equations used in this function are from Ref. [2] because they lead to
-    physical probabilities, while the ones from Ref. [1] do not.
+    The algorithm is based on Refs. [1-3].
 
     Parameters
     ----------
@@ -104,9 +96,7 @@ def get_prob_kraus(
     in_cov, in_norm = in_state
     a, b, d, c = kraus
 
-    tmp = np.identity(in_cov.shape[0]) + in_cov @ d
-
-    prob = c * np.sqrt(np.linalg.det(tmp))
+    prob = c * np.sqrt(np.linalg.det(in_cov - d))
 
     # numerical issue where `prob = 1.00000000001.. > 1`
     if prob > 1 and prob < 1 + eps:
@@ -164,7 +154,7 @@ def sq_inner_product(
 def check_fgs(state: Tuple[np.ndarray, float], **kargs):
     """
     Checks if the given state is a FGS.
-    It uses $M M^T <= 1$, $M = -M^T$, and $M_{ii} = 0$ (see Ref. [2]).
+    It uses $M M^T <= 1$, $M = -M^T$, and $M_{ii} = 0$ (see Ref. [1]).
 
     FGS = Fermionic Gaussian State
 
@@ -173,29 +163,25 @@ def check_fgs(state: Tuple[np.ndarray, float], **kargs):
     state:
         A possible FGS described by its covariance matrix and norm.
     **kargs
-        Extra arguments for `numpy.allclose` and `numpy.close`.
+        Extra arguments for `numpy.allclose`.
 
     References
     ----------
-    [1] Suzuki, Yasunari, Keisuke Fujii, and Masato Koashi. "Efficient simulation of quantum
-    error correction under coherent error based on the nonunitary free-fermionic formalism."
-    Physical review letters 119.19 (2017): 190503.
-
-    [2] Bravyi, Sergey. "Lagrangian representation for fermionic linear optics."
+    [1] Bravyi, Sergey. "Lagrangian representation for fermionic linear optics."
     arXiv preprint quant-ph/0404180 (2004).
-
-    [3] Bravyi, Sergey, Martin Suchara, and Alexander Vargo. "Efficient algorithms for maximum
-    likelihood decoding in the surface code."
-    Physical Review A 90.3 (2014): 032326.
     """
     m, norm = state
 
     assert len(m.shape) == 2 and (m.shape[0] == m.shape[1])
 
-    assert norm >= 0
+    # avoid case where norm - numerical instabilities ~< 0
+    assert norm >= 0 or np.allclose(norm, 0, **kargs)
+    assert norm <= 1 or np.allclose(norm, 1, **kargs)
     assert np.allclose(m, -m.T, **kargs)
-    assert np.allclose(np.diagonal(m), 0)
+    assert np.allclose(np.diagonal(m), 0, **kargs)
     # avoid case where np.trace(m.T @ m) + numerical instabilities >~ m.shape[0]
-    assert np.trace(m.T @ m) <= m.shape[0] or np.allclose(np.trace(m.T @ m), m.shape[0])
+    assert np.trace(m.T @ m) <= m.shape[0] or np.allclose(
+        np.trace(m.T @ m), m.shape[0], **kargs
+    )
 
     return

@@ -10,7 +10,7 @@ def memory_experiment(
     model: Model,
     num_rounds: int,
     data_init: Dict[str, bool],
-    debug: True,
+    debug: bool = True,
 ) -> Tuple[np.ndarray, int]:
     """
     Returns a single sample of running the memory experiment for the

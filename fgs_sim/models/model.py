@@ -128,7 +128,7 @@ class Model:
 
         return cov, norm
 
-    def log_meas(self, state: Tuple[np.ndarray, float]) -> float:
+    def log_meas(self, state: Tuple[np.ndarray, float], eps=1e-6) -> float:
         """
         Returns the posterior probability of having a logical errors given an
         (unnormalized) FGS, meaning the probability that the initial logical
@@ -140,6 +140,9 @@ class Model:
         ----------
         state
             FGS before the logical measurement.
+        eps
+            Tolerance for numerical instabilities when calculating the probability.
+            Default: 1e-6.
 
         Returns
         -------
@@ -157,6 +160,12 @@ class Model:
         log_error_posterior = 0.5 * (
             1 - cov[2 * (self.num_data + 1) - 2, 2 * (self.num_data + 1) - 3]
         )
+
+        # numerical issue where `log_error_posterior = 1.00000000001.. > 1`
+        if log_error_posterior > 1 and log_error_posterior < 1 + log_error_posterior:
+            log_error_posterior = 1
+        if log_error_posterior < 0 and log_error_posterior > -eps:
+            log_error_posterior = 0
 
         return log_error_posterior
 
