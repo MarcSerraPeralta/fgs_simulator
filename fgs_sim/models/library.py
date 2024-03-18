@@ -119,7 +119,7 @@ class ParityNoiseModel(Model):
 
             sign = list_sign[index]
             phi = sign * params["phi"]
-            c = 0.5 * (1 + sign * params["c"])
+            c = 0.5 * 0.5 * (1 + sign * params["c"])
 
             # apply corresponding Kraus operator based on the
             # measured syndrome
@@ -244,7 +244,7 @@ class PhenNoiseModel(Model):
 
             sign = list_sign[index]
             phi = sign * params["phi"]
-            c = 0.5 * (1 + sign * params["c"])
+            c = 0.5 * 0.5 * (1 + sign * params["c"])
 
             # apply corresponding Kraus operator based on the
             # measured syndrome
