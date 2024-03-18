@@ -100,7 +100,7 @@ class ParityNoiseModel(Model):
             list_sign = [+1, +1, -1, -1]
             list_synd = [0, 1, 0, 1]
             probs = []
-            for sign, synd in zip(list_sign[:-1], list_synd[:-1]):
+            for sign, synd in zip(list_sign, list_synd):
                 kraus = noisy_parity(
                     qubit_ids=qubit_ids,
                     synd=synd,
@@ -110,7 +110,6 @@ class ParityNoiseModel(Model):
                 c = 0.5 * 0.5 * (1 + sign * params["c"])
                 prob = get_prob_kraus(state, (*kraus, c))
                 probs.append(prob)
-            probs.append(1 - sum(probs))
 
             # sample syndrome from prob_0
             index = np.random.choice(range(4), p=probs)
@@ -226,7 +225,7 @@ class PhenNoiseModel(Model):
             list_sign = [+1, +1, -1, -1]
             list_synd = [0, 1, 0, 1]
             probs = []
-            for sign, synd in zip(list_sign[:-1], list_synd[:-1]):
+            for sign, synd in zip(list_sign, list_synd):
                 kraus = noisy_parity(
                     qubit_ids=qubit_ids,
                     synd=synd,
@@ -236,7 +235,6 @@ class PhenNoiseModel(Model):
                 c = 0.5 * 0.5 * (1 + sign * params["c"])
                 prob = get_prob_kraus(state, (*kraus, c))
                 probs.append(prob)
-            probs.append(1 - sum(probs))
 
             # sample syndrome from prob_0
             index = np.random.choice(range(4), p=probs)
