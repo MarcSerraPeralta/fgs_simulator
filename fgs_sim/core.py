@@ -52,6 +52,7 @@ def apply_op(
     return out_cov, out_norm
 
 
+@nb.njit()
 def get_prob_kraus(
     in_state: Tuple[np.ndarray, float],
     kraus: Tuple[np.ndarray, np.ndarray, np.ndarray, float],
@@ -96,7 +97,12 @@ def get_prob_kraus(
     in_cov, in_norm = in_state
     a, b, d, c = kraus
 
-    prob = c * np.sqrt(np.linalg.det(in_cov - d))
+    det = np.linalg.det(in_cov - d)
+    # numerical issue where `det = =0.00000000001.. < 1`
+    if det < 0 and det > -eps:
+        det = 0
+
+    prob = c * np.sqrt(det)
 
     # numerical issue where `prob = 1.00000000001.. > 1`
     if prob > 1 and prob < 1 + eps:

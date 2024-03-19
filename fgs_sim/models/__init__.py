@@ -1,7 +1,7 @@
 from .model import Model
-from .library import IncNoiseModel, ParityNoiseModel, PhenNoiseModel
+from .library import IncNoiseModel, ParityNoiseModel, PhenNoiseModel, CircNoiseModel
 from .setup import Setup
-from . import kraus
+from . import kraus, utils
 
 __all__ = [
     "Model",
@@ -9,5 +9,6 @@ __all__ = [
     "ParityNoiseModel",
     "PhenNoiseModel",
     "kraus",
+    "utils",
     "Setup",
 ]

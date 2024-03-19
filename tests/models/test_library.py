@@ -1,7 +1,12 @@
 import numpy as np
 
 from fgs_sim import Setup
-from fgs_sim.models import IncNoiseModel, ParityNoiseModel, PhenNoiseModel
+from fgs_sim.models import (
+    IncNoiseModel,
+    ParityNoiseModel,
+    PhenNoiseModel,
+    CircNoiseModel,
+)
 from fgs_sim.core import check_fgs
 
 
@@ -125,6 +130,50 @@ def test_noisy_PhenNoiseModel():
         }
     )
     model = PhenNoiseModel(setup, qubit_line=["D1", "A1", "D2", "A2", "D3"])
+    data_init = {"D1": 0, "D2": 0, "D3": 0}
+    num_rounds = 5
+
+    for _ in range(1_000):
+        syndrome, log_error_posterior = debug_memory_experiment(
+            model, num_rounds, data_init
+        )
+
+    return
+
+
+def test_ideal_CircNoiseModel():
+    setup = Setup(
+        {
+            "setup": [
+                {"idle": {"phi": 0, "c": 0.2}},
+                {"parity": {"phi": 0, "c": 1}},
+            ]
+        }
+    )
+    model = CircNoiseModel(setup, qubit_line=["D1", "A1", "D2", "A2", "D3"])
+    data_init = {"D1": 0, "D2": 0, "D3": 0}
+    num_rounds = 20
+
+    syndrome, log_error_posterior = debug_memory_experiment(
+        model, num_rounds, data_init
+    )
+
+    assert (syndrome == 0).all()
+    assert np.allclose(log_error_posterior, 0)
+
+    return
+
+
+def test_noisy_CircNoiseModel():
+    setup = Setup(
+        {
+            "setup": [
+                {"idle": {"phi": 0.2, "c": 0.2}},
+                {"parity": {"phi": 0.2, "c": 0.8}},
+            ]
+        }
+    )
+    model = CircNoiseModel(setup, qubit_line=["D1", "A1", "D2", "A2", "D3"])
     data_init = {"D1": 0, "D2": 0, "D3": 0}
     num_rounds = 5
 

@@ -14,7 +14,7 @@ class Setup:
 
         _setup = deepcopy(setup)
         self.name = _setup.pop("name", "")
-        self.description = setup.pop("description", "")
+        self.description = _setup.pop("description", "")
         self.load_params(_setup.pop("setup"))
         return
 
