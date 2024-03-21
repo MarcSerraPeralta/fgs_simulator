@@ -1,6 +1,7 @@
 from typing import Tuple
 from itertools import product
 
+import random
 import numpy as np
 from scipy.special import comb
 import numba as nb
@@ -65,7 +66,7 @@ def apply_qubit_coh_noise(
     prob_0 = get_prob_kraus(state, (*kraus, c))
 
     # sample from phi=+phi
-    sign = np.random.choice([+1, -1], p=[prob_0, 1 - prob_0])
+    sign = random.choices([+1, -1], weights=[prob_0, 1 - prob_0])[0]
     phi = sign * rot_angle
     c = 0.5 * (1 + sign * coherence)
 
@@ -145,7 +146,7 @@ def apply_noisy_parity(
         probs.append(prob)
 
     # sample syndrome from prob_0
-    index = np.random.choice(range(len(combinations)), p=probs)
+    index = random.choices(range(len(combinations)), weights=probs)[0]
     sign, synd = combinations[index]
 
     phi = sign * rot_angle
@@ -213,8 +214,8 @@ def apply_noisy_parity_circ_level(
     Physical review letters 119.19 (2017): 190503.
     """
     # sample the circuit-level noise
-    noise_q1 = np.random.choice(["IX", "XI", "XX"], p=[1 / 3, 1 / 3, 1 / 3])
-    noise_q2 = np.random.choice(["IX", "XI", "XX"], p=[1 / 3, 1 / 3, 1 / 3])
+    noise_q1 = random.choices(["IX", "XI", "XX"], weights=[1 / 3, 1 / 3, 1 / 3])[0]
+    noise_q2 = random.choices(["IX", "XI", "XX"], weights=[1 / 3, 1 / 3, 1 / 3])[0]
 
     # apply noise due to circ-level noise in CNOTs
     if noise_q1 == "XX":
@@ -260,7 +261,7 @@ def apply_noisy_parity_circ_level(
         probs.append(prob)
 
     # sample syndrome from probabilities
-    index = np.random.choice(range(len(combinations)), p=probs)
+    index = random.choices(range(len(combinations)), weights=probs)[0]
     k, synd = combinations[index]
 
     phi = k * rot_angle

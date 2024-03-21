@@ -1,5 +1,6 @@
 from typing import List, Dict, Tuple
 
+import random
 import numpy as np
 
 from .kraus import ideal_parity
@@ -209,7 +210,7 @@ class Model:
             prob_0 = get_prob_kraus(state, (*kraus, c))
 
             # sample syndrome from prob_0
-            synd = np.random.choice([0, 1], p=[prob_0, 1 - prob_0])
+            synd = random.choices([0, 1], weights=[prob_0, 1 - prob_0])[0]
             synd_vector.append(synd)
 
             # apply corresponding Kraus operator based on the
@@ -264,7 +265,7 @@ class Model:
             prob_0 = get_prob_kraus(state, (*kraus, c))
 
             # sample syndrome from prob_0
-            synd = np.random.choice([0, 1], p=[prob_0, 1 - prob_0])
+            synd = random.choices([0, 1], weights=[prob_0, 1 - prob_0])[0]
             synd_vector.append(synd)
 
             # apply corresponding Kraus operator based on the

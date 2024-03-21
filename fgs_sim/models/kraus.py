@@ -163,7 +163,7 @@ def noisy_parity(
     likelihood decoding in the surface code."
     Physical Review A 90.3 (2014): 032326.
     """
-    assert np.abs(qubit_ids[1] - qubit_ids[0]) == 1
+    assert abs(qubit_ids[1] - qubit_ids[0]) == 1
     qubit_id = min(qubit_ids)
 
     a = np.zeros((2 * num_qubits, 2 * num_qubits))
