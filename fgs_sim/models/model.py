@@ -3,7 +3,7 @@ from typing import List, Dict, Tuple
 import random
 import numpy as np
 
-from .kraus import ideal_parity
+from .utils import apply_ideal_parity
 from ..core import apply_op, get_prob_kraus
 
 
@@ -44,6 +44,8 @@ class Model:
             p: [self.data_qubits[i], self.data_qubits[i + 1]]
             for i, p in enumerate(self.parities)
         }
+
+        self._pre_kraus = {}
 
         return
 
@@ -200,28 +202,13 @@ class Model:
             qubits = self.neighbours[parity]
             qubit_ids = [self.qubit_id(q) for q in qubits]
 
-            # get probability of syndrome=0
-            kraus = ideal_parity(
+            state, synd, self._pre_kraus = apply_ideal_parity(
+                state=state,
                 qubit_ids=qubit_ids,
-                synd=0,
-                num_qubits=self.num_data + 1,
+                num_data=self.num_data,
+                pre_kraus=self._pre_kraus,
             )
-            c = 0.5
-            prob_0 = get_prob_kraus(state, (*kraus, c))
-
-            # sample syndrome from prob_0
-            synd = random.choices([0, 1], weights=[prob_0, 1 - prob_0])[0]
             synd_vector.append(synd)
-
-            # apply corresponding Kraus operator based on the
-            # measured syndrome
-            matrices = ideal_parity(
-                qubit_ids=qubit_ids,
-                synd=synd,
-                num_qubits=self.num_data + 1,
-            )
-            c = 0.5
-            state = apply_op(state, (*matrices, c))
 
         return state, np.array(synd_vector)
 
@@ -255,28 +242,13 @@ class Model:
             qubits = self.neighbours[parity]
             qubit_ids = [self.qubit_id(q) for q in qubits]
 
-            # get probability of syndrome=0
-            kraus = ideal_parity(
+            state, synd, self._pre_kraus = apply_ideal_parity(
+                state=state,
                 qubit_ids=qubit_ids,
-                synd=0,
-                num_qubits=self.num_data + 1,
+                num_data=self.num_data,
+                pre_kraus=self._pre_kraus,
             )
-            c = 0.5
-            prob_0 = get_prob_kraus(state, (*kraus, c))
-
-            # sample syndrome from prob_0
-            synd = random.choices([0, 1], weights=[prob_0, 1 - prob_0])[0]
             synd_vector.append(synd)
-
-            # apply corresponding Kraus operator based on the
-            # measured syndrome
-            matrices = ideal_parity(
-                qubit_ids=qubit_ids,
-                synd=synd,
-                num_qubits=self.num_data + 1,
-            )
-            c = 0.5
-            state = apply_op(state, (*matrices, c))
 
         return state, np.array(synd_vector)
 

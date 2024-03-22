@@ -31,12 +31,13 @@ class IncNoiseModel(Model):
         for qubit in self.data_qubits:
             params = self.setup.param("idle", qubit)
 
-            state = apply_qubit_coh_noise(
+            state, self._pre_kraus = apply_qubit_coh_noise(
                 state=state,
                 qubit_id=self.qubit_id(qubit),
                 rot_angle=params["phi"],
                 coherence=params["c"],
                 num_data=self.num_data,
+                pre_kraus=self._pre_kraus,
             )
 
         return state
@@ -66,12 +67,13 @@ class ParityNoiseModel(Model):
             qubit_ids = [self.qubit_id(q) for q in qubits]
             params = self.setup.param("parity", parity)
 
-            state, synd = apply_noisy_parity(
+            state, synd, self._pre_kraus = apply_noisy_parity(
                 state=state,
                 qubit_ids=qubit_ids,
                 rot_angle=params["phi"],
                 coherence=params["c"],
                 num_data=self.num_data,
+                pre_kraus=self._pre_kraus,
             )
             synd_vector.append(synd)
 
@@ -99,12 +101,13 @@ class PhenNoiseModel(Model):
         for qubit in self.data_qubits:
             params = self.setup.param("idle", qubit)
 
-            state = apply_qubit_coh_noise(
+            state, self._pre_kraus = apply_qubit_coh_noise(
                 state=state,
                 qubit_id=self.qubit_id(qubit),
                 rot_angle=params["phi"],
                 coherence=params["c"],
                 num_data=self.num_data,
+                pre_kraus=self._pre_kraus,
             )
 
         return state
@@ -132,12 +135,13 @@ class PhenNoiseModel(Model):
             qubit_ids = [self.qubit_id(q) for q in qubits]
             params = self.setup.param("parity", parity)
 
-            state, synd = apply_noisy_parity(
+            state, synd, self._pre_kraus = apply_noisy_parity(
                 state=state,
                 qubit_ids=qubit_ids,
                 rot_angle=params["phi"],
                 coherence=params["c"],
                 num_data=self.num_data,
+                pre_kraus=self._pre_kraus,
             )
             synd_vector.append(synd)
 
@@ -165,12 +169,13 @@ class CircNoiseModel(Model):
         for qubit in self.data_qubits:
             params = self.setup.param("idle", qubit)
 
-            state = apply_qubit_coh_noise(
+            state, self._pre_kraus = apply_qubit_coh_noise(
                 state=state,
                 qubit_id=self.qubit_id(qubit),
                 rot_angle=params["phi"],
                 coherence=params["c"],
                 num_data=self.num_data,
+                pre_kraus=self._pre_kraus,
             )
 
         return state
@@ -198,12 +203,13 @@ class CircNoiseModel(Model):
             qubit_ids = [self.qubit_id(q) for q in qubits]
             params = self.setup.param("parity", parity)
 
-            state, synd = apply_noisy_parity_circ_level(
+            state, synd, self._pre_kraus = apply_noisy_parity_circ_level(
                 state=state,
                 qubit_ids=qubit_ids,
                 rot_angle=params["phi"],
                 coherence=params["c"],
                 num_data=self.num_data,
+                pre_kraus=self._pre_kraus,
             )
             synd_vector.append(synd)
 

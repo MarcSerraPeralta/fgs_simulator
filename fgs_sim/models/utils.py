@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Optional
 from itertools import product
 
 import random
@@ -7,7 +7,7 @@ from scipy.special import comb
 import numba as nb
 
 from ..core import apply_op, get_prob_kraus
-from .kraus import qubit_coh_noise, noisy_parity
+from .kraus import qubit_coh_noise, noisy_parity, ideal_parity
 
 
 def apply_qubit_coh_noise(
@@ -16,6 +16,7 @@ def apply_qubit_coh_noise(
     rot_angle: float,
     coherence: float,
     num_data: int,
+    pre_kraus: Optional[dict] = {},
 ) -> Tuple[np.ndarray, float]:
     """
     Applies `qubit_coh_noise` operation to the given (unnormalized) FGS.
@@ -57,11 +58,16 @@ def apply_qubit_coh_noise(
     Physical review letters 119.19 (2017): 190503.
     """
     # get probability of syndrome=0
-    kraus = qubit_coh_noise(
-        qubit_id=qubit_id,
-        phi=rot_angle,
-        num_qubits=num_data + 1,
-    )
+    label = ("qubit_coh_noise", qubit_id, rot_angle)
+    if label in pre_kraus:
+        kraus = pre_kraus[label]
+    else:
+        kraus = qubit_coh_noise(
+            qubit_id=qubit_id,
+            phi=rot_angle,
+            num_qubits=num_data + 1,
+        )
+        pre_kraus[label] = kraus
     c = 0.5 * (1 + coherence)
     prob_0 = get_prob_kraus(state, (*kraus, c))
 
@@ -71,14 +77,20 @@ def apply_qubit_coh_noise(
     c = 0.5 * (1 + sign * coherence)
 
     # apply operator
-    matrices = qubit_coh_noise(
-        qubit_id=qubit_id,
-        phi=phi,
-        num_qubits=num_data + 1,
-    )
-    out_state = apply_op(state, (*matrices, c))
+    label = ("qubit_coh_noise", qubit_id, phi)
+    if label in pre_kraus:
+        kraus = pre_kraus[label]
+    else:
+        kraus = qubit_coh_noise(
+            qubit_id=qubit_id,
+            phi=rot_angle,
+            num_qubits=num_data + 1,
+        )
+        pre_kraus[label] = kraus
 
-    return out_state
+    out_state = apply_op(state, (*kraus, c))
+
+    return out_state, pre_kraus
 
 
 def apply_noisy_parity(
@@ -87,6 +99,7 @@ def apply_noisy_parity(
     rot_angle: float,
     coherence: float,
     num_data: int,
+    pre_kraus: Optional[dict] = {},
 ) -> Tuple[Tuple[np.ndarray, float], bool]:
     """
     Applies `noisy_parity` operation to the given (unnormalized) FGS.
@@ -129,18 +142,26 @@ def apply_noisy_parity(
     error correction under coherent error based on the nonunitary free-fermionic formalism."
     Physical review letters 119.19 (2017): 190503.
     """
+    qubit_ids = tuple(qubit_ids)
+
     # get probabilities
     list_sign = [+1, -1]
     list_synd = [0, 1]
     combinations = list(product(list_sign, list_synd))
     probs = []
     for sign, synd in combinations:
-        kraus = noisy_parity(
-            qubit_ids=qubit_ids,
-            synd=synd,
-            phi=sign * rot_angle,
-            num_qubits=num_data + 1,
-        )
+        label = ("noisy_parity", qubit_ids, synd, sign * rot_angle)
+        if label in pre_kraus:
+            kraus = pre_kraus[label]
+        else:
+            kraus = noisy_parity(
+                qubit_ids=qubit_ids,
+                synd=synd,
+                phi=sign * rot_angle,
+                num_qubits=num_data + 1,
+            )
+            pre_kraus[label] = kraus
+
         c = 0.5 * 0.5 * (1 + sign * coherence)
         prob = get_prob_kraus(state, (*kraus, c))
         probs.append(prob)
@@ -154,15 +175,105 @@ def apply_noisy_parity(
 
     # apply corresponding Kraus operator based on the
     # measured syndrome
-    matrices = noisy_parity(
-        qubit_ids=qubit_ids,
-        synd=synd,
-        phi=phi,
-        num_qubits=num_data + 1,
-    )
-    out_state = apply_op(state, (*matrices, c))
+    label = ("noisy_parity", qubit_ids, synd, phi)
+    if label in pre_kraus:
+        kraus = pre_kraus[label]
+    else:
+        kraus = noisy_parity(
+            qubit_ids=qubit_ids,
+            synd=synd,
+            phi=phi,
+            num_qubits=num_data + 1,
+        )
+        pre_kraus[label] = kraus
 
-    return out_state, synd
+    out_state = apply_op(state, (*kraus, c))
+
+    return out_state, synd, pre_kraus
+
+
+def apply_ideal_parity(
+    state: Tuple[np.ndarray, float],
+    qubit_ids: Tuple[int, int],
+    num_data: int,
+    pre_kraus: Optional[dict] = {},
+) -> Tuple[Tuple[np.ndarray, float], bool]:
+    """
+    Applies `ideal_parity` operation to the given (unnormalized) FGS.
+
+    The algorithm is based on Ref. [1].
+    Note that the Kraus operators are applied with a given probability
+    because the whole FGM is not Gaussian.
+
+    FGS = Fermionic Gaussian State
+    FGM = Fermionic Gaussian Map
+
+    Parameters
+    ----------
+    state
+        Unnormalized FGS before the `ideal_parity` operation.
+    qubit_ids
+        Indexes of the qubits to which apply the `noisy_parity`.
+        These values are used to create the Kraus operators.
+    num_data
+        Total number of data qubits to simulate.
+        Note: it does not include the extra qubit that it is added
+        for the logical measurement to be a FGM.
+
+    Returns
+    -------
+    out_state
+        Unnormalized FGS after the `ideal_parity` operation.
+    synd
+        Syndrome outcome of the `ideal_parity` operation.
+
+    References
+    ----------
+    [1] Suzuki, Yasunari, Keisuke Fujii, and Masato Koashi. "Efficient simulation of quantum
+    error correction under coherent error based on the nonunitary free-fermionic formalism."
+    Physical review letters 119.19 (2017): 190503.
+    """
+    qubit_ids = tuple(qubit_ids)
+
+    # get probabilities
+    list_synd = [0, 1]
+    probs = []
+    for synd in list_synd:
+        label = ("ideal_parity", qubit_ids, synd)
+        if label in pre_kraus:
+            kraus = pre_kraus[label]
+        else:
+            kraus = ideal_parity(
+                qubit_ids=qubit_ids,
+                synd=synd,
+                num_qubits=num_data + 1,
+            )
+            pre_kraus[label] = kraus
+
+        c = 0.5
+        prob = get_prob_kraus(state, (*kraus, c))
+        probs.append(prob)
+
+    # sample syndrome from prob_0
+    index = random.choices(range(len(list_synd)), weights=probs)[0]
+    synd = list_synd[index]
+    c = 0.5
+
+    # apply corresponding Kraus operator based on the
+    # measured syndrome
+    label = ("ideal_parity", qubit_ids, synd)
+    if label in pre_kraus:
+        kraus = pre_kraus[label]
+    else:
+        kraus = ideal_parity(
+            qubit_ids=qubit_ids,
+            synd=synd,
+            num_qubits=num_data + 1,
+        )
+        pre_kraus[label] = kraus
+    out_state = apply_op(state, (*kraus, c))
+
+    return out_state, synd, pre_kraus
 
 
 def apply_noisy_parity_circ_level(
@@ -171,6 +282,7 @@ def apply_noisy_parity_circ_level(
     rot_angle: float,
     coherence: float,
     num_data: int,
+    pre_kraus: Optional[dict] = {},
 ) -> Tuple[Tuple[np.ndarray, float], bool]:
     """
     Applies `noisy_parity` operation to the given (unnormalized) FGS.
@@ -213,26 +325,30 @@ def apply_noisy_parity_circ_level(
     error correction under coherent error based on the nonunitary free-fermionic formalism."
     Physical review letters 119.19 (2017): 190503.
     """
+    qubit_ids = tuple(qubit_ids)
+
     # sample the circuit-level noise
     noise_q1 = random.choices(["IX", "XI", "XX"], weights=[1 / 3, 1 / 3, 1 / 3])[0]
     noise_q2 = random.choices(["IX", "XI", "XX"], weights=[1 / 3, 1 / 3, 1 / 3])[0]
 
     # apply noise due to circ-level noise in CNOTs
     if noise_q1 == "XX":
-        state = apply_qubit_coh_noise(
+        state, pre_kraus = apply_qubit_coh_noise(
             state=state,
             qubit_id=qubit_ids[0],
             rot_angle=rot_angle,
             coherence=coherence,
             num_data=num_data,
+            pre_kraus=pre_kraus,
         )
     if noise_q2 == "XX":
-        state = apply_qubit_coh_noise(
+        state, pre_kraus = apply_qubit_coh_noise(
             state=state,
             qubit_id=qubit_ids[1],
             rot_angle=rot_angle,
             coherence=coherence,
             num_data=num_data,
+            pre_kraus=pre_kraus,
         )
 
     # compute N for the parity check noise and the combinations
@@ -244,12 +360,17 @@ def apply_noisy_parity_circ_level(
 
     # get probabilities for the parity kraus operators
     for k, synd in combinations:
-        kraus = noisy_parity(
-            qubit_ids=qubit_ids,
-            synd=synd,
-            phi=k * rot_angle,
-            num_qubits=num_data + 1,
-        )
+        label = ("noisy_parity", qubit_ids, synd, k * rot_angle)
+        if label in pre_kraus:
+            kraus = pre_kraus[label]
+        else:
+            kraus = noisy_parity(
+                qubit_ids=qubit_ids,
+                synd=synd,
+                phi=k * rot_angle,
+                num_qubits=num_data + 1,
+            )
+            pre_kraus[label] = kraus
         c = (
             0.5
             * comb(num_maps, (num_maps - k) // 2, exact=True)
@@ -274,30 +395,37 @@ def apply_noisy_parity_circ_level(
     )
 
     # apply corresponding Kraus operator based on the measured syndrome
-    matrices = noisy_parity(
-        qubit_ids=qubit_ids,
-        synd=synd,
-        phi=phi,
-        num_qubits=num_data + 1,
-    )
-    state = apply_op(state, (*matrices, c))
+    label = ("noisy_parity", qubit_ids, synd, phi)
+    if label in pre_kraus:
+        kraus = pre_kraus[label]
+    else:
+        kraus = noisy_parity(
+            qubit_ids=qubit_ids,
+            synd=synd,
+            phi=phi,
+            num_qubits=num_data + 1,
+        )
+        pre_kraus[label] = kraus
+    state = apply_op(state, (*kraus, c))
 
     # apply noise due to circ-level noise in CNOTs
     if noise_q1 == "XI":
-        state = apply_qubit_coh_noise(
+        state, pre_kraus = apply_qubit_coh_noise(
             state=state,
             qubit_id=qubit_ids[0],
             rot_angle=rot_angle,
             coherence=coherence,
             num_data=num_data,
+            pre_kraus=pre_kraus,
         )
     if noise_q2 == "XI":
-        state = apply_qubit_coh_noise(
+        state, pre_kraus = apply_qubit_coh_noise(
             state=state,
             qubit_id=qubit_ids[1],
             rot_angle=rot_angle,
             coherence=coherence,
             num_data=num_data,
+            pre_kraus=pre_kraus,
         )
 
-    return state, synd
+    return state, synd, pre_kraus

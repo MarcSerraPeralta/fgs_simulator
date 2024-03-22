@@ -1,0 +1,18 @@
+BENCHMARK:
+PhenNoiseModel
+1000 samples
+50 num_rounds
+
+=================================
+NUMBA CORE&KRAUS + RANDOM.CHOICES + STORE KRAUS
+=================================
+real	0m7.666s
+user	0m7.648s
+sys	0m0.652s
+
+=================================
+NUMBA CORE&KRAUS + RANDOM.CHOICES
+=================================
+real	0m12.055s
+user	0m11.940s
+sys	0m2.169s
