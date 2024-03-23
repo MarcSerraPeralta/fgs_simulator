@@ -12,6 +12,7 @@ def dataset_generator(
     num_rounds: int,
     data_init: Dict[str, bool],
     num_samples: int,
+    return_probs: bool = True,
     verbose: bool = True,
 ):
     """
@@ -29,6 +30,11 @@ def dataset_generator(
         Number of QEC rounds in the experiment
     num_samples
         Number of samples to take.
+    return_probs
+        Flag to specify the type of logical output to return.
+        By default, it outputs the logical error probability.
+        If False, samples a single bit corresponding to a logical error
+        given the logical error probability.
     verbose
         If True, prints status bar of the dataset generation.
         Default: True.
@@ -39,24 +45,27 @@ def dataset_generator(
         Dataset with the syndromes and logical error posterior probabilities.
     """
     list_syndromes = []
-    list_log_error_post = []
+    list_log_errors = []
     idx_percent = num_samples // 100
     for i in range(num_samples):
         if verbose and (i % idx_percent == 0):
             print(f"\r{i // idx_percent}%", end="", flush=True)
 
-        syndromes, log_error_post = experiment(
-            model=model, num_rounds=num_rounds, data_init=data_init
+        syndromes, log_errors = experiment(
+            model=model,
+            num_rounds=num_rounds,
+            data_init=data_init,
+            return_prob=return_probs,
         )
 
         list_syndromes.append(syndromes)
-        list_log_error_post.append(log_error_post)
+        list_log_errors.append(log_errors)
     print("\r100%", flush=True)
 
     ds = xr.Dataset(
         data_vars=dict(
             syndromes=(("shot", "qec_round", "anc_qubit"), list_syndromes),
-            log_err_post=(("shot",), list_log_error_post),
+            log_errors=(("shot",), list_log_errors),
             data_init=(("data_qubit",), [data_init[q] for q in model.data_qubits]),
         ),
         coords=dict(

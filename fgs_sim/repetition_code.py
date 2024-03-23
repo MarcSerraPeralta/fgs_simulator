@@ -1,5 +1,6 @@
 from typing import Dict, Tuple
 
+import random
 import numpy as np
 
 from .models import Model
@@ -10,6 +11,7 @@ def memory_experiment(
     model: Model,
     num_rounds: int,
     data_init: Dict[str, bool],
+    return_prob: bool = True,
 ) -> Tuple[np.ndarray, int]:
     """
     Returns a single sample of running the memory experiment for the
@@ -36,6 +38,11 @@ def memory_experiment(
         Dictionary specifying the initial state of the data qubits.
         Note that for the FGS simulation to be efficient, the data qubits are
         initialized in a superposition of `data_init` and the oposite of `data_init`.
+    return_prob
+        Flag to specify the type of logical output to return.
+        By default, it outputs the logical error probability.
+        If False, samples a single bit corresponding to a logical error
+        given the logical error probability.
 
     Returns
     -------
@@ -68,4 +75,10 @@ def memory_experiment(
     syndromes = np.array(syndromes)
     log_error_posterior = model.log_meas(state)
 
-    return syndromes, log_error_posterior
+    if return_prob:
+        return syndromes, log_error_posterior
+
+    log_error = random.choices(
+        [0, 1], weights=[1 - log_error_posterior, log_error_posterior]
+    )[0]
+    return syndromes, log_error
