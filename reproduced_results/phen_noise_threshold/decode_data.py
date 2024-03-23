@@ -61,17 +61,15 @@ for coherence in COHERENCES:
             defects = get_defects(ds.syndromes)
             defects = defects.transpose("shot", "qec_round", "anc_qubit").values
             defect_vec = defects.reshape(NUM_SHOTS, -1)
-            log_err_post = ds.log_err_post.transpose("shot").values
+            log_errors = ds.log_errors.transpose("shot").values
 
             predictions = mwpm.decode_batch(defect_vec).flatten()
 
-            log_flips_prob = (
-                log_err_post * (1 - predictions) + (1 - log_err_post) * predictions
-            )
+            log_flips = log_errors * (1 - predictions) + (1 - log_errors) * predictions
 
             # only datasets can be stored in this xarray version
             out_ds = xr.Dataset(
-                data_vars=dict(log_flip_prob=(("shot",), log_flips_prob)),
+                data_vars=dict(log_flip_prob=(("shot",), log_flips)),
                 coords=dict(
                     shot=list(range(NUM_SHOTS)),
                 ),
@@ -82,6 +80,6 @@ for coherence in COHERENCES:
 
             print(
                 f"d={distance} p={prob:0.3f} c={coherence} "
-                f"p_L={np.average(log_flips_prob)} d_r={np.average(defects)}",
+                f"p_L={np.average(log_flips)} d_r={np.average(defects)}",
                 flush=True,
             )
