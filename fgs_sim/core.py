@@ -189,5 +189,9 @@ def check_fgs(state: Tuple[np.ndarray, float], **kargs):
     assert np.trace(m.T @ m) <= m.shape[0] or np.allclose(
         np.trace(m.T @ m), m.shape[0], **kargs
     )
+    eigenvalues, eigenvectors = np.linalg.eig(m.T @ m)
+    for eigenvalue in eigenvalues:
+        assert eigenvalue >= 0 or np.allclose(eigenvalue, 0, **kargs)
+        assert eigenvalue <= 1 or np.allclose(eigenvalue, 1, **kargs)
 
     return
