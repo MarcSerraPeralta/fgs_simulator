@@ -10,7 +10,7 @@ DISTANCES = [3, 5, 7, 9]
 COHERENCES = [0, 1]
 PROBS = [0.1, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.9]
 NUM_SHOTS = 50_000
-USE_PROBS = True
+USE_PROBS = False
 
 OUTPUT_NAME = pathlib.Path("output")
 IMG_NAME = pathlib.Path("img")
@@ -50,6 +50,9 @@ for distance in DISTANCES:
 
 # ax.set_yscale("log")
 # ax.set_xscale("log")
+
+ax.set_xlim(0, 1)
+ax.set_ylim(0, 1)
 
 ax.set_xlabel("physical error probability, $p$")
 ax.set_ylabel("logical error probability, $p_L$")

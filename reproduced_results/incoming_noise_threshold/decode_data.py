@@ -14,7 +14,7 @@ DISTANCES = [3, 5, 7, 9]
 COHERENCES = [0, 1]
 PROBS = [0.1, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.9]
 NUM_SHOTS = 50_000
-USE_PROBS = True
+USE_PROBS = False
 
 DATA_NAME = pathlib.Path("data")
 OUTPUT_NAME = pathlib.Path("output")
@@ -22,7 +22,7 @@ OUTPUT_NAME = pathlib.Path("output")
 ###########################
 
 
-def get_dem_uniform_inc_noise(distance):
+def get_dem_uniform_s_edges(distance):
     dem_str = ""
     # space errors
     for r in range(distance):
@@ -45,7 +45,7 @@ for coherence in COHERENCES:
                 continue
 
             ds = xr.load_dataset(DATA_NAME / file_name)
-            dem = get_dem_uniform_inc_noise(distance)
+            dem = get_dem_uniform_s_edges(distance)
             mwpm = Matching(dem)
             # mwpm.draw()
             # plt.show()
