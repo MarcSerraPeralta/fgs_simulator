@@ -4,7 +4,6 @@ from itertools import product
 import random
 import numpy as np
 from scipy.special import comb
-import numba as nb
 
 from ..core import apply_op, get_prob_kraus
 from .kraus import qubit_coh_noise, noisy_parity, ideal_parity

@@ -2,6 +2,7 @@ from typing import Dict
 
 import numpy as np
 import xarray as xr
+import numba as nb
 
 from .models import Model
 
@@ -111,6 +112,7 @@ def get_defects(syndromes: xr.DataArray, frame: xr.DataArray = None) -> xr.DataA
     return defects
 
 
+@nb.njit()
 def get_prob_log_err(predictions: np.ndarray, log_err_post: np.ndarray) -> np.ndarray:
     """
     Returns the corrected logical error posterior probability for each sample using
