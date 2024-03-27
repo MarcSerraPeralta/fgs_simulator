@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 ###########################
 
 DISTANCES = [3, 5, 7, 9, 11, 13, 15]
-PROBS = [0.06, 0.07, 0.08, 0.1, 0.11, 0.12]
-NUM_SHOTS = 50_000
+PROBS = [0.06, 0.07, 0.08, 0.10, 0.11, 0.12]
+NUM_SHOTS = 1_000_000
 
 EXP_NAME = pathlib.Path("output")
 
@@ -182,9 +182,9 @@ for distance in DISTANCES:
         PROBS,
         y_values,
         yerr=y_err,
-        marker="o",  # if coherence == 1 else "+",
+        marker="+",
         color=colors[distance],
-        linestyle="--",  # if coherence == 1 else "-",
+        linestyle="-",
     )
 
 ax.set_yscale("log")
