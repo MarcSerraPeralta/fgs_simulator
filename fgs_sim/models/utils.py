@@ -271,6 +271,7 @@ def apply_ideal_parity(
             num_qubits=num_data + 1,
         )
         pre_kraus[label] = kraus
+
     out_state = apply_op(state, (*kraus, c))
 
     return out_state, synd, pre_kraus
@@ -327,12 +328,8 @@ def apply_noisy_parity_circ_level(
     """
     qubit_ids = tuple(qubit_ids)
 
-    # sample the circuit-level noise
-    noise_q1 = random.choices(["IX", "XI", "XX"], weights=[1 / 3, 1 / 3, 1 / 3])[0]
-    noise_q2 = random.choices(["IX", "XI", "XX"], weights=[1 / 3, 1 / 3, 1 / 3])[0]
-
     # apply noise due to circ-level noise in CNOTs
-    if noise_q1 == "XX":
+    if random.choices(["no", "XX"], weights=[2 / 3, 1 / 3])[0] == "XX":
         state, pre_kraus = apply_qubit_coh_noise(
             state=state,
             qubit_id=qubit_ids[0],
@@ -341,7 +338,7 @@ def apply_noisy_parity_circ_level(
             num_data=num_data,
             pre_kraus=pre_kraus,
         )
-    if noise_q2 == "XX":
+    if random.choices(["no", "XX"], weights=[2 / 3, 1 / 3])[0] == "XX":
         state, pre_kraus = apply_qubit_coh_noise(
             state=state,
             qubit_id=qubit_ids[1],
@@ -352,6 +349,8 @@ def apply_noisy_parity_circ_level(
         )
 
     # compute N for the parity check noise and the combinations
+    noise_q1 = random.choices(["no", "IX"], weights=[2 / 3, 1 / 3])[0]
+    noise_q2 = random.choices(["no", "IX"], weights=[2 / 3, 1 / 3])[0]
     num_maps = 2 + (noise_q1 == "IX") + (noise_q2 == "IX")
     list_k = np.arange(-num_maps, num_maps + 1, 2, dtype=int)
     list_synd = [0, 1]
@@ -381,6 +380,9 @@ def apply_noisy_parity_circ_level(
         prob = get_prob_kraus(state, (*kraus, c))
         probs.append(prob)
 
+    assert sum(probs) < 1 + 1e-6
+    assert sum(probs) > 1 - 1e-6
+
     # sample syndrome from probabilities
     index = random.choices(range(len(combinations)), weights=probs)[0]
     k, synd = combinations[index]
@@ -406,10 +408,11 @@ def apply_noisy_parity_circ_level(
             num_qubits=num_data + 1,
         )
         pre_kraus[label] = kraus
+
     state = apply_op(state, (*kraus, c))
 
     # apply noise due to circ-level noise in CNOTs
-    if noise_q1 == "XI":
+    if random.choices(["no", "XI"], weights=[2 / 3, 1 / 3])[0] == "XI":
         state, pre_kraus = apply_qubit_coh_noise(
             state=state,
             qubit_id=qubit_ids[0],
@@ -418,7 +421,7 @@ def apply_noisy_parity_circ_level(
             num_data=num_data,
             pre_kraus=pre_kraus,
         )
-    if noise_q2 == "XI":
+    if random.choices(["no", "XI"], weights=[2 / 3, 1 / 3])[0] == "XI":
         state, pre_kraus = apply_qubit_coh_noise(
             state=state,
             qubit_id=qubit_ids[1],
