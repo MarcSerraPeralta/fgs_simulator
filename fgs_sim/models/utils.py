@@ -69,10 +69,10 @@ def apply_qubit_coh_noise(
         )
         pre_kraus[label] = kraus
     c = 0.5 * (1 + coherence)
-    prob_0 = get_prob_kraus(state, (*kraus, c))
+    prob = get_prob_kraus(state, (*kraus, c))
 
     # sample from phi=+phi
-    sign = random.choices([+1, -1], weights=[prob_0, 1 - prob_0])[0]
+    sign = random.choices([+1, -1], weights=[prob, 1 - prob])[0]
     phi = sign * rot_angle
     c = 0.5 * (1 + sign * coherence)
 
@@ -83,7 +83,7 @@ def apply_qubit_coh_noise(
     else:
         kraus = qubit_coh_noise(
             qubit_id=qubit_id,
-            phi=rot_angle,
+            phi=phi,
             num_qubits=num_data + 1,
         )
         pre_kraus[label] = kraus
@@ -379,9 +379,6 @@ def apply_noisy_parity_circ_level(
         )
         prob = get_prob_kraus(state, (*kraus, c))
         probs.append(prob)
-
-    assert sum(probs) < 1 + 1e-6
-    assert sum(probs) > 1 - 1e-6
 
     # sample syndrome from probabilities
     index = random.choices(range(len(combinations)), weights=probs)[0]

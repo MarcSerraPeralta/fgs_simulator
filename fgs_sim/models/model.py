@@ -164,8 +164,8 @@ class Model:
             1 - cov[2 * (self.num_data + 1) - 2, 2 * (self.num_data + 1) - 3]
         )
 
-        # numerical issue where `log_error_posterior = 1.00000000001.. > 1`
-        if log_error_posterior > 1 and log_error_posterior < 1 + log_error_posterior:
+        # numerical issue where `prob = 1.00000000001.. > 1` or negative
+        if log_error_posterior > 1 and log_error_posterior < 1 + eps:
             log_error_posterior = 1
         if log_error_posterior < 0 and log_error_posterior > -eps:
             log_error_posterior = 0

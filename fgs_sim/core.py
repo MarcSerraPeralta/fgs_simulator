@@ -8,6 +8,7 @@ import numba as nb
 def apply_op(
     in_state: Tuple[np.ndarray, float],
     operator: Tuple[np.ndarray, np.ndarray, np.ndarray, float],
+    eps: float = 1e-6,
 ) -> Tuple[np.ndarray, float]:
     """
     Returns the resulting unnormalized FGS ($\\epsilon(\\rho)$) after applying the
@@ -24,6 +25,8 @@ def apply_op(
         Initial (unnormalized) FGS described by its covariance matrix and norm.
     operator:
         FGM described by its representation in terms of A, B, D, and C (see Ref. [2]).
+    eps:
+        Maximum numerical error expected when computing the determinant.
 
     Returns
     -------
@@ -47,7 +50,12 @@ def apply_op(
     a, b, d, c = operator
 
     out_cov = a - b @ np.linalg.inv(in_cov - d) @ b.T
-    out_norm = c * np.sqrt(np.linalg.det(in_cov - d)) * in_norm
+
+    det = np.linalg.det(in_cov - d)
+    # numerical issue where `det = -0.00000000001.. < 0` for the sqrt
+    if det < 0 and det > -eps:
+        det = 0
+    out_norm = c * np.sqrt(det) * in_norm
 
     return out_cov, out_norm
 
@@ -98,7 +106,7 @@ def get_prob_kraus(
     a, b, d, c = kraus
 
     det = np.linalg.det(in_cov - d)
-    # numerical issue where `det = =0.00000000001.. < 1`
+    # numerical issue where `det = -0.00000000001.. < 0` for the sqrt
     if det < 0 and det > -eps:
         det = 0
 
@@ -117,6 +125,7 @@ def get_prob_kraus(
 def sq_inner_product(
     state_1: Tuple[np.ndarray, float],
     state_2: Tuple[np.ndarray, float],
+    eps: float = 1e-6,
 ) -> float:
     """
     Returns the squared inner product ($\\mathrm{Tr}(\\rho_1 \\rho_2)$)
@@ -132,6 +141,8 @@ def sq_inner_product(
         One of the (unnormalized) FGSs described by its covariance matrix and norm.
     state_2
         Other (unnormalized) FGSs described by its covariance matrix and norm.
+    eps
+        Maximum numerical error expected when computing the norm.
 
     Returns
     -------
@@ -152,7 +163,11 @@ def sq_inner_product(
     cov_2, norm_2 = state_2
     num_qubits = cov_1.shape[0] // 2
 
-    norm = np.sqrt(norm_1 * norm_2 * np.linalg.det(cov_1 + cov_2) / 2**num_qubits)
+    det = np.linalg.det(cov_1 + cov_2)
+    # numerical issue where `det = -0.00000000001.. < 0` for norm >= 0
+    if det < 0 and det > -eps:
+        det = 0
+    norm = norm_1 * norm_2 * det / 2**num_qubits
 
     return norm
 
