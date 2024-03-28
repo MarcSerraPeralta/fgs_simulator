@@ -1,9 +1,7 @@
-import time
 import pathlib
 
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
 
 import stim
 from pymatching import Matching
@@ -14,8 +12,9 @@ from fgs_sim.utils import get_defects
 
 DISTANCES = [3, 5, 7, 9, 11, 13, 15]
 COHERENCES = [0, 1]
-PROBS = [0.06, 0.07, 0.08, 0.1, 0.11, 0.12]
+PROBS = [0.06, 0.07, 0.08, 0.10, 0.11, 0.12]
 NUM_SHOTS = 50_000
+USE_PROBS = True
 
 DATA_NAME = pathlib.Path("data")
 OUTPUT_NAME = pathlib.Path("output")
@@ -23,7 +22,7 @@ OUTPUT_NAME = pathlib.Path("output")
 ###########################
 
 
-def get_dem_uniform(distance):
+def get_dem_uniform_st_edges(distance):
     dem_str = ""
     # space errors
     for r in range(distance):
@@ -44,16 +43,13 @@ OUTPUT_NAME.mkdir(exist_ok=True, parents=True)
 for coherence in COHERENCES:
     for prob in PROBS:
         for distance in DISTANCES:
-            output_name = (
-                OUTPUT_NAME / f"d{distance}_p{prob:0.3f}_c{coherence}_n{NUM_SHOTS}.nc"
-            )
+            file_name = f"d{distance}_p{prob:0.3f}_c{coherence}_probs{USE_PROBS}_n{NUM_SHOTS}.nc"
+            output_name = OUTPUT_NAME / file_name
             if output_name.exists():
                 continue
 
-            ds = xr.load_dataset(
-                DATA_NAME / f"d{distance}_p{prob:0.3f}_c{coherence}_n{NUM_SHOTS}.nc"
-            )
-            dem = get_dem_uniform(distance)
+            ds = xr.load_dataset(DATA_NAME / file_name)
+            dem = get_dem_uniform_st_edges(distance)
             mwpm = Matching(dem)
             # mwpm.draw()
             # plt.show()
@@ -74,9 +70,7 @@ for coherence in COHERENCES:
                     shot=list(range(NUM_SHOTS)),
                 ),
             )
-            out_ds.to_netcdf(
-                OUTPUT_NAME / f"d{distance}_p{prob:0.3f}_c{coherence}_n{NUM_SHOTS}.nc"
-            )
+            out_ds.to_netcdf(output_name)
 
             print(
                 f"d={distance} p={prob:0.3f} c={coherence} "

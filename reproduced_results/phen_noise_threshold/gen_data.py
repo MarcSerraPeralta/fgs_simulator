@@ -2,10 +2,9 @@ import time
 import pathlib
 
 import numpy as np
-import xarray as xr
 
 from fgs_sim.repetition_code import memory_experiment
-from fgs_sim import Model, Setup
+from fgs_sim import Setup
 from fgs_sim.models import PhenNoiseModel
 from fgs_sim.utils import dataset_generator
 
@@ -13,8 +12,9 @@ from fgs_sim.utils import dataset_generator
 
 DISTANCES = [3, 5, 7, 9, 11, 13, 15]
 COHERENCES = [0, 1]
-PROBS = [0.06, 0.07, 0.08, 0.1, 0.11, 0.12]
+PROBS = [0.06, 0.07, 0.08, 0.10, 0.11, 0.12]
 NUM_SHOTS = 50_000
+USE_PROBS = True
 
 EXP_NAME = pathlib.Path("data")
 
@@ -57,7 +57,7 @@ for coherence in COHERENCES:
             num_rounds = distance - 1
             model = PhenNoiseModel(setup, qubit_line=qubit_line)
             output_name = (
-                EXP_NAME / f"d{distance}_p{prob:0.3f}_c{coherence}_n{NUM_SHOTS}.nc"
+                EXP_NAME / f"d{distance}_p{prob:0.3f}_c{coherence}_probs{USE_PROBS}_n{NUM_SHOTS}.nc"
             )
 
             if output_name.exists():
@@ -69,6 +69,7 @@ for coherence in COHERENCES:
                 num_rounds=num_rounds,
                 num_samples=NUM_SHOTS,
                 data_init=data_init,
+                return_probs=USE_PROBS,
             )
 
             ds.assign_coords(c=coherence, p=prob)

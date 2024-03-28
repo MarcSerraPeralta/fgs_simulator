@@ -1,22 +1,16 @@
-import time
 import pathlib
 
 import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
-
-import stim
-from pymatching import Matching
-
-from fgs_sim.utils import get_defects
 
 ###########################
 
 DISTANCES = [3, 5, 7, 9, 11, 13, 15]
 COHERENCES = [0, 1]
-PROBS = [0.06, 0.07, 0.08, 0.1, 0.11, 0.12]
+PROBS = [0.06, 0.07, 0.08, 0.10, 0.11, 0.12]
 NUM_SHOTS = 50_000
+USE_PROBS = True
 
 OUTPUT_NAME = pathlib.Path("output")
 IMG_NAME = pathlib.Path("img")
@@ -38,7 +32,7 @@ for distance in DISTANCES:
 
         for prob in PROBS:
             ds = xr.load_dataset(
-                OUTPUT_NAME / f"d{distance}_p{prob:0.3f}_c{coherence}_n{NUM_SHOTS}.nc"
+                OUTPUT_NAME / f"d{distance}_p{prob:0.3f}_c{coherence}_probs{USE_PROBS}_n{NUM_SHOTS}.nc"
             )
             data = ds.log_flip_prob.values
             y_values.append(np.average(data))
