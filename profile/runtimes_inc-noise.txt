@@ -4,6 +4,20 @@ IncNoiseModel
 50 num_rounds
 
 ====================
+COMPILED WITH CYTHON + RANDOM.CHOICES + STORE KRAUS
+====================
+real	0m18.501s
+user	0m43.429s
+sys	2m17.809s
+
+====================
+PYTHON + RANDOM.CHOICES + STORE KRAUS
+====================
+real	0m21.139s
+user	0m50.647s
+sys	2m34.379s
+
+====================
 WITH NUMBA ACTIVATE IN CORE&KRAUS + RANDOM.CHOICES + STORE KRAUS
 ====================
 real	0m6.345s

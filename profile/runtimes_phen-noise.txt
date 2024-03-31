@@ -4,6 +4,20 @@ PhenNoiseModel
 50 num_rounds
 
 =================================
+CYTHON COMPILATION + RANOM.CHOICES + STORE KRAUS
+=================================
+real	0m20.958s
+user	0m49.414s
+sys	2m36.185s
+
+=================================
+PYTHON + RANDOM.CHOICES + STORE KRAUS
+=================================
+real	0m21.971s
+user	0m51.117s
+sys	2m43.542s
+
+=================================
 NUMBA CORE&KRAUS + RANDOM.CHOICES + STORE KRAUS
 =================================
 real	0m7.666s
