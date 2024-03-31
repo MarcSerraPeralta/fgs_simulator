@@ -1,10 +1,8 @@
 from typing import Tuple
 
 import numpy as np
-import numba as nb
 
 
-@nb.njit()
 def apply_op(
     in_state: Tuple[np.ndarray, float],
     operator: Tuple[np.ndarray, np.ndarray, np.ndarray, float],
@@ -60,12 +58,11 @@ def apply_op(
     return out_cov, out_norm
 
 
-@nb.njit()
 def get_prob_kraus(
     in_state: Tuple[np.ndarray, float],
     kraus: Tuple[np.ndarray, np.ndarray, np.ndarray, float],
     eps: float = 1e-6,
-) -> Tuple[np.ndarray, float]:
+) -> float:
     """
     Returns the probability of applying the kraus operator of the FGM given
     the initial (unnormalized) FGS.
@@ -121,7 +118,6 @@ def get_prob_kraus(
     return prob
 
 
-@nb.njit()
 def sq_inner_product(
     state_1: Tuple[np.ndarray, float],
     state_2: Tuple[np.ndarray, float],

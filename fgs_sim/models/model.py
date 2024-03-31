@@ -1,10 +1,8 @@
 from typing import List, Dict, Tuple
 
-import random
 import numpy as np
 
 from .utils import apply_ideal_parity
-from ..core import apply_op, get_prob_kraus
 
 
 class Model:
