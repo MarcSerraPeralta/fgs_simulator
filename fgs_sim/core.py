@@ -1,8 +1,10 @@
 from typing import Tuple
 
 import numpy as np
+import numba as nb
 
 
+@nb.njit()
 def apply_op(
     in_state: Tuple[np.ndarray, float],
     operator: Tuple[np.ndarray, np.ndarray, np.ndarray, float],
@@ -58,6 +60,7 @@ def apply_op(
     return out_cov, out_norm
 
 
+@nb.njit()
 def get_prob_kraus(
     in_state: Tuple[np.ndarray, float],
     kraus: Tuple[np.ndarray, np.ndarray, np.ndarray, float],

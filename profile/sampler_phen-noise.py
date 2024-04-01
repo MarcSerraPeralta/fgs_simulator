@@ -9,7 +9,7 @@ model = PhenNoiseModel(setup, qubit_line=qubit_line)
 
 data_init = {q: 0 for q in qubit_line if "D" in q}
 num_rounds = 50
-num_samples = 1_000
+num_samples = 10_000
 
 for i in range(num_samples):
     if i % 100 == 0:

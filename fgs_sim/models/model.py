@@ -43,8 +43,6 @@ class Model:
             for i, p in enumerate(self.parities)
         }
 
-        self._pre_kraus = {}
-
         return
 
     @property
@@ -198,13 +196,12 @@ class Model:
         synd_vector = []
         for parity in self.parities:
             qubits = self.neighbours[parity]
-            qubit_ids = [self.qubit_id(q) for q in qubits]
+            qubit_ids = (self.qubit_id(qubits[0]), self.qubit_id(qubits[1]))
 
-            state, synd, self._pre_kraus = apply_ideal_parity(
+            state, synd = apply_ideal_parity(
                 state=state,
                 qubit_ids=qubit_ids,
                 num_data=self.num_data,
-                pre_kraus=self._pre_kraus,
             )
             synd_vector.append(synd)
 
@@ -238,13 +235,12 @@ class Model:
         synd_vector = []
         for parity in self.parities:
             qubits = self.neighbours[parity]
-            qubit_ids = [self.qubit_id(q) for q in qubits]
+            qubit_ids = (self.qubit_id(qubits[0]), self.qubit_id(qubits[1]))
 
-            state, synd, self._pre_kraus = apply_ideal_parity(
+            state, synd = apply_ideal_parity(
                 state=state,
                 qubit_ids=qubit_ids,
                 num_data=self.num_data,
-                pre_kraus=self._pre_kraus,
             )
             synd_vector.append(synd)
 
