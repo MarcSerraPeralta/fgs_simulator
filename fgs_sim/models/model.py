@@ -43,6 +43,8 @@ class Model:
             for i, p in enumerate(self.parities)
         }
 
+        self.anc_states = np.zeros(len(self.parities), dtype=bool)
+
         return
 
     @property
@@ -193,8 +195,8 @@ class Model:
         error correction under coherent error based on the nonunitary free-fermionic formalism."
         Physical review letters 119.19 (2017): 190503.
         """
-        synd_vector = []
-        for parity in self.parities:
+        outcome_vector = []
+        for k, parity in enumerate(self.parities):
             qubits = self.neighbours[parity]
             qubit_ids = (self.qubit_id(qubits[0]), self.qubit_id(qubits[1]))
 
@@ -203,9 +205,10 @@ class Model:
                 qubit_ids=qubit_ids,
                 num_data=self.num_data,
             )
-            synd_vector.append(synd)
+            outcome_vector.append(synd ^ self.anc_states[k])
+            self.anc_states[k] = self.anc_states[k] ^ synd
 
-        return state, np.array(synd_vector)
+        return state, np.array(outcome_vector)
 
     def qec_round(
         self, state: Tuple[np.ndarray, float]
@@ -232,8 +235,8 @@ class Model:
         error correction under coherent error based on the nonunitary free-fermionic formalism."
         Physical review letters 119.19 (2017): 190503.
         """
-        synd_vector = []
-        for parity in self.parities:
+        outcome_vector = []
+        for k, parity in enumerate(self.parities):
             qubits = self.neighbours[parity]
             qubit_ids = (self.qubit_id(qubits[0]), self.qubit_id(qubits[1]))
 
@@ -242,9 +245,10 @@ class Model:
                 qubit_ids=qubit_ids,
                 num_data=self.num_data,
             )
-            synd_vector.append(synd)
+            outcome_vector.append(synd ^ self.anc_states[k])
+            self.anc_states[k] = self.anc_states[k] ^ synd
 
-        return state, np.array(synd_vector)
+        return state, np.array(outcome_vector)
 
     def idle(self, state: Tuple[np.ndarray, float]) -> Tuple[np.ndarray, float]:
         """

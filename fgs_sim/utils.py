@@ -64,7 +64,7 @@ def dataset_generator(
 
     ds = xr.Dataset(
         data_vars=dict(
-            syndromes=(("shot", "qec_round", "anc_qubit"), list_syndromes),
+            outcomes=(("shot", "qec_round", "anc_qubit"), list_syndromes),
             log_errors=(("shot",), list_log_errors),
             data_init=(("data_qubit",), [data_init[q] for q in model.data_qubits]),
         ),
@@ -109,6 +109,39 @@ def get_defects(syndromes: xr.DataArray, frame: xr.DataArray = None) -> xr.DataA
     defects = syndromes ^ shifted_syn
 
     return defects
+
+
+def get_syndromes(
+    outcomes: xr.DataArray, anc_inits: xr.DataArray = None
+) -> xr.DataArray:
+    """
+    Returns the syndromes from the given outcomes calculated as
+
+    s[n] = m[n] XOR m[n-1] for n=1,...,R
+
+    with m[0] = ancilla init states, which is 0 by default.
+
+    Paramters
+    ---------
+    outcomes
+        Measurement outcomes. Must contain `qec_round` coordinate.
+    anc_inits
+        Initial ancilla bitstring. Must contain a dimension corresponding
+        to the ancilla qubit / parity check labels.
+
+    Returns
+    -------
+    syndromes
+        Observed syndromes
+    """
+    shifted_out = outcomes.shift(qec_round=1, fill_value=0)
+
+    if anc_inits is not None:
+        shifted_out[dict(qec_round=0)] = anc_inits
+
+    syndromes = outcomes ^ shifted_out
+
+    return syndromes
 
 
 def get_prob_log_err(predictions: np.ndarray, log_err_post: np.ndarray) -> np.ndarray:

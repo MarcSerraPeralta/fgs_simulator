@@ -7,6 +7,7 @@ from .utils import (
     apply_qubit_coh_noise,
     apply_noisy_parity,
     apply_noisy_parity_circ_level,
+    numba_choice,
 )
 
 
@@ -60,8 +61,8 @@ class ParityNoiseModel(Model):
         out_state
             Unnormalized FGS after the (noisy) QEC round.
         """
-        synd_vector = []
-        for parity in self.parities:
+        outcome_vector = []
+        for k, parity in enumerate(self.parities):
             qubits = self.neighbours[parity]
             qubit_ids = (self.qubit_id(qubits[0]), self.qubit_id(qubits[1]))
             params = self.setup.param("parity", parity)
@@ -73,9 +74,21 @@ class ParityNoiseModel(Model):
                 coherence=params["c"],
                 num_data=self.num_data,
             )
-            synd_vector.append(synd)
 
-        return state, np.array(synd_vector)
+            # add ancilla errors
+            # The quantum measurement error happens after the measurement.
+            assign_prob = params.get("assing_prob")
+            qmeas_prob = params.get("qmeas_prob")
+
+            outcome = synd ^ self.anc_states[k]
+            noisy_outcome = outcome ^ numba_choice([1 - assign_prob, assign_prob])
+            self.anc_states[k] = (
+                self.anc_states[k] ^ synd ^ numba_choice([1 - qmeas_prob, qmeas_prob])
+            )
+
+            outcome_vector.append(noisy_outcome)
+
+        return state, np.array(outcome_vector)
 
 
 class PhenNoiseModel(Model):
@@ -126,7 +139,7 @@ class PhenNoiseModel(Model):
         out_state
             Unnormalized FGS after the (noisy) QEC round.
         """
-        synd_vector = []
+        outcome_vector = []
         for parity in self.parities:
             qubits = self.neighbours[parity]
             qubit_ids = (self.qubit_id(qubits[0]), self.qubit_id(qubits[1]))
@@ -139,9 +152,21 @@ class PhenNoiseModel(Model):
                 coherence=params["c"],
                 num_data=self.num_data,
             )
-            synd_vector.append(synd)
 
-        return state, np.array(synd_vector)
+            # add ancilla errors
+            # The quantum measurement error happens after the measurement.
+            assign_prob = params.get("assing_prob")
+            qmeas_prob = params.get("qmeas_prob")
+
+            outcome = synd ^ self.anc_states[k]
+            noisy_outcome = outcome ^ numba_choice([1 - assign_prob, assign_prob])
+            self.anc_states[k] = (
+                self.anc_states[k] ^ synd ^ numba_choice([1 - qmeas_prob, qmeas_prob])
+            )
+
+            outcome_vector.append(noisy_outcome)
+
+        return state, np.array(outcome_vector)
 
 
 class CircNoiseModel(Model):
@@ -192,7 +217,7 @@ class CircNoiseModel(Model):
         out_state
             Unnormalized FGS after the (noisy) QEC round.
         """
-        synd_vector = []
+        outcome_vector = []
         for parity in self.parities:
             qubits = self.neighbours[parity]
             qubit_ids = (self.qubit_id(qubits[0]), self.qubit_id(qubits[1]))
@@ -205,6 +230,18 @@ class CircNoiseModel(Model):
                 coherence=params["c"],
                 num_data=self.num_data,
             )
-            synd_vector.append(synd)
 
-        return state, np.array(synd_vector)
+            # add ancilla errors
+            # The quantum measurement error happens after the measurement.
+            assign_prob = params.get("assing_prob")
+            qmeas_prob = params.get("qmeas_prob")
+
+            outcome = synd ^ self.anc_states[k]
+            noisy_outcome = outcome ^ numba_choice([1 - assign_prob, assign_prob])
+            self.anc_states[k] = (
+                self.anc_states[k] ^ synd ^ numba_choice([1 - qmeas_prob, qmeas_prob])
+            )
+
+            outcome_vector.append(noisy_outcome)
+
+        return state, np.array(outcome_vector)
