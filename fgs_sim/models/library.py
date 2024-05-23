@@ -140,7 +140,7 @@ class PhenNoiseModel(Model):
             Unnormalized FGS after the (noisy) QEC round.
         """
         outcome_vector = []
-        for parity in self.parities:
+        for k, parity in enumerate(self.parities):
             qubits = self.neighbours[parity]
             qubit_ids = (self.qubit_id(qubits[0]), self.qubit_id(qubits[1]))
             params = self.setup.param("parity", parity)
@@ -218,7 +218,7 @@ class CircNoiseModel(Model):
             Unnormalized FGS after the (noisy) QEC round.
         """
         outcome_vector = []
-        for parity in self.parities:
+        for k, parity in enumerate(self.parities):
             qubits = self.neighbours[parity]
             qubit_ids = (self.qubit_id(qubits[0]), self.qubit_id(qubits[1]))
             params = self.setup.param("parity", parity)
