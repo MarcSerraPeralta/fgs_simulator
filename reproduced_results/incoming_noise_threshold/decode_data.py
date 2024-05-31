@@ -22,14 +22,14 @@ OUTPUT_NAME = pathlib.Path("output")
 ###########################
 
 
-def get_dem_uniform_s_edges(distance):
+def get_dem_uniform_s_edges(distance, prob):
     dem_str = ""
     # space errors
     for r in range(distance):
-        dem_str += f"error(0.1) D{r*(distance-1)}\n"
+        dem_str += f"error({prob}) D{r*(distance-1)}\n"
         for q in range(1, distance - 1):
-            dem_str += f"error(0.1) D{r*(distance-1) + q} D{r*(distance-1) + q - 1}\n"
-        dem_str += f"error(0.1) D{r*(distance-1) + distance - 2} L0\n"
+            dem_str += f"error({prob}) D{r*(distance-1) + q} D{r*(distance-1) + q - 1}\n"
+        dem_str += f"error({prob}) D{r*(distance-1) + distance - 2} L0\n"
     dem = stim.DetectorErrorModel(dem_str)
     return dem
 
@@ -45,7 +45,7 @@ for coherence in COHERENCES:
                 continue
 
             ds = xr.load_dataset(DATA_NAME / file_name)
-            dem = get_dem_uniform_s_edges(distance)
+            dem = get_dem_uniform_s_edges(distance, prob)
             mwpm = Matching(dem)
             # mwpm.draw()
             # plt.show()

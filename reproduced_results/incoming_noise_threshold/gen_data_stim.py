@@ -85,14 +85,14 @@ def get_repetition_code_inc_noise(qubit_line, num_rounds, prob):
     return circuit
 
 
-def get_dem_uniform_s_edges(distance):
+def get_dem_uniform_s_edges(distance, prob):
     dem_str = ""
     # space errors
     for r in range(distance):
-        dem_str += f"error(0.1) D{r*(distance-1)}\n"
+        dem_str += f"error({prob}) D{r*(distance-1)}\n"
         for q in range(1, distance - 1):
-            dem_str += f"error(0.1) D{r*(distance-1) + q} D{r*(distance-1) + q - 1}\n"
-        dem_str += f"error(0.1) D{r*(distance-1) + distance - 2} L0\n"
+            dem_str += f"error({prob}) D{r*(distance-1) + q} D{r*(distance-1) + q - 1}\n"
+        dem_str += f"error({prob}) D{r*(distance-1) + distance - 2} L0\n"
     dem = stim.DetectorErrorModel(dem_str)
     return dem
 
@@ -109,15 +109,12 @@ for prob in PROBS:
         num_rounds = distance - 1
         output_name = EXP_NAME / f"d{distance}_p{prob:0.3f}_c0_n{NUM_SHOTS}_stim.nc"
 
-        if output_name.exists():
-            continue
+        #if output_name.exists():
+        #    continue
 
         circuit = get_repetition_code_inc_noise(
             qubit_line=qubit_line, num_rounds=num_rounds, prob=prob
         )
-
-        if output_name.exists():
-            continue
 
         sampler = circuit.compile_detector_sampler()
         defect_vec, log_errors = sampler.sample(
@@ -125,7 +122,7 @@ for prob in PROBS:
         )
         log_errors = log_errors.flatten()
 
-        dem = get_dem_uniform_s_edges(distance)
+        dem = get_dem_uniform_s_edges(distance, prob)
         mwpm = Matching(dem)
 
         predictions = mwpm.decode_batch(defect_vec).flatten()
