@@ -95,7 +95,7 @@ class Setup:
     def param(self, param: str, *qubits: str) -> float:
         try:
             val = self._qubit_params[qubits][param]
-            return self._eval_param_val(val)
+            return val
         except KeyError:
             pass
 

@@ -266,24 +266,23 @@ class FitNoiseModel(Model):
             Unnormalized FGS after the (noisy) idling.
         """
         for qubit in self.data_qubits:
-            params_decay = self.setup.param("idle_decay", qubit)
-            params_coh = self.setup.param("idle_coh", qubit)
+            param_decay = self.setup.param("decay_prob_half_meas", qubit)
+            param_coh = self.setup.param("coh_phi", qubit)
 
             state = apply_qubit_coh_noise(
                 state=state,
                 qubit_id=self.qubit_id(qubit),
-                rot_angle=params_coh["phi"],
+                rot_angle=param_coh,
                 coherence=1,
                 num_data=self.num_data,
             )
             state = apply_qubit_coh_noise(
                 state=state,
                 qubit_id=self.qubit_id(qubit),
-                rot_angle=np.arcsin(np.sqrt(params_decay["prob"])),
+                rot_angle=np.arcsin(np.sqrt(param_decay)),
                 coherence=0,
                 num_data=self.num_data,
             )
-
 
         return state
 
@@ -308,31 +307,35 @@ class FitNoiseModel(Model):
         for k, parity in enumerate(self.parities):
             qubits = self.neighbours[parity]
             qubit_ids = (self.qubit_id(qubits[0]), self.qubit_id(qubits[1]))
-            params = self.setup.param("parity", parity)
+            param_phi = self.setup.param("coh_phi", parity)
 
             state, synd = apply_noisy_parity_circ_level(
                 state=state,
                 qubit_ids=qubit_ids,
-                rot_angle=params["phi"],
-                coherence=params["c"],
+                rot_angle=param_phi,
+                coherence=1,
                 num_data=self.num_data,
             )
 
             # add ancilla errors
             # the error channel for the ancilla measurement is:
             # decay + assignment error + decay
-            assign_prob = params.get("assing_prob")
-            decay_prob = params.get("decay_prob")
+            assign_prob = self.setup.param("assign_error_prob", parity)
+            decay_prob = self.setup.param("decay_prob_half_meas", parity)
 
             self.anc_states[k] = self.anc_states[k] ^ synd
             if self.anc_states[k]:
-                self.anc_states[k] = self.anc_states[k] ^ numba_choice([1 - decay_prob, decay_prob])
+                self.anc_states[k] = self.anc_states[k] ^ numba_choice(
+                    [1 - decay_prob, decay_prob]
+                )
 
             outcome = self.anc_states[k]
             noisy_outcome = outcome ^ numba_choice([1 - assign_prob, assign_prob])
 
             if self.anc_states[k]:
-                self.anc_states[k] = self.anc_states[k] ^ numba_choice([1 - decay_prob, decay_prob])
+                self.anc_states[k] = self.anc_states[k] ^ numba_choice(
+                    [1 - decay_prob, decay_prob]
+                )
 
             outcome_vector.append(noisy_outcome)
 
