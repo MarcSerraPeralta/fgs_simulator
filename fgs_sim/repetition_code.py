@@ -58,9 +58,7 @@ def memory_experiment(
     if num_rounds <= 0:
         raise ValueError("num_rounds needs to be a positive integer")
 
-    # reset model (for the ancillas to be initialized in 0)
-    model.reset()
-
+    model.reset_ancillas()
     state = model.init_qubits(data_init)
     syndromes = []
 

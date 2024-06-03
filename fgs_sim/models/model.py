@@ -55,7 +55,7 @@ class Model:
     def qubit_line(self):
         return self._qubit_line
 
-    def reset(self):
+    def reset_ancillas(self):
         self.anc_states = np.zeros(len(self.parities), dtype=bool)
         return
 
