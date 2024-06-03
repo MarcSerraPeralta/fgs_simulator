@@ -16,13 +16,13 @@ def debug_memory_experiment(model, num_rounds, data_init):
     check_fgs(state)
 
     for _ in range(num_rounds):
-        state = model.idle(state)
+        state = model.incoming_noise(state)
         check_fgs(state)
         state, syndrome = model.qec_round(state)
         syndromes.append(syndrome)
         check_fgs(state)
 
-    state = model.idle(state)
+    state = model.incoming_noise(state)
     check_fgs(state)
 
     state, syndrome = model.final_qec_round(state)
@@ -38,7 +38,20 @@ def debug_memory_experiment(model, num_rounds, data_init):
 
 
 def test_ideal_IncNoiseModel():
-    setup = Setup({"setup": [{"idle": {"phi": 0, "c": 0.6}}]})
+    setup = Setup(
+        {
+            "setup": [
+                {
+                    "incoming_noise": {
+                        "phi": 0,
+                        "c": 0.6,
+                        "assign_error_prob": 0,
+                        "decay_prob_half_meas": 0,
+                    }
+                }
+            ]
+        }
+    )
     model = IncNoiseModel(setup, qubit_line=["D1", "A1", "D2", "A2", "D3"])
     data_init = {"D1": 0, "D2": 0, "D3": 0}
     num_rounds = 50
@@ -54,7 +67,20 @@ def test_ideal_IncNoiseModel():
 
 
 def test_noisy_IncNoiseModel():
-    setup = Setup({"setup": [{"idle": {"phi": np.pi / 4, "c": 0.6}}]})
+    setup = Setup(
+        {
+            "setup": [
+                {
+                    "incoming_noise": {
+                        "phi": np.pi / 4,
+                        "c": 0.6,
+                        "assign_error_prob": 0.1,
+                        "decay_prob_half_meas": 0.1,
+                    }
+                }
+            ]
+        }
+    )
     model = IncNoiseModel(setup, qubit_line=["D1", "A1", "D2", "A2", "D3"])
     data_init = {"D1": 0, "D2": 0, "D3": 0}
     num_rounds = 5
@@ -68,7 +94,20 @@ def test_noisy_IncNoiseModel():
 
 
 def test_ideal_ParityNoiseModel():
-    setup = Setup({"setup": [{"parity": {"phi": 0, "c": 1}}]})
+    setup = Setup(
+        {
+            "setup": [
+                {
+                    "parity": {
+                        "phi": 0,
+                        "c": 1,
+                        "assign_error_prob": 0,
+                        "decay_prob_half_meas": 0,
+                    }
+                }
+            ]
+        }
+    )
     model = ParityNoiseModel(setup, qubit_line=["D1", "A1", "D2", "A2", "D3"])
     data_init = {"D1": 0, "D2": 0, "D3": 0}
     num_rounds = 20
@@ -84,7 +123,20 @@ def test_ideal_ParityNoiseModel():
 
 
 def test_noisy_ParityNoiseModel():
-    setup = Setup({"setup": [{"parity": {"phi": np.pi / 4, "c": 0.6}}]})
+    setup = Setup(
+        {
+            "setup": [
+                {
+                    "parity": {
+                        "phi": np.pi / 4,
+                        "c": 0.6,
+                        "assign_error_prob": 0.1,
+                        "decay_prob_half_meas": 0.1,
+                    }
+                }
+            ]
+        }
+    )
     model = ParityNoiseModel(setup, qubit_line=["D1", "A1", "D2", "A2", "D3"])
     data_init = {"D1": 0, "D2": 0, "D3": 0}
     num_rounds = 5
@@ -101,8 +153,15 @@ def test_ideal_PhenNoiseModel():
     setup = Setup(
         {
             "setup": [
-                {"idle": {"phi": 0, "c": 0.2}},
-                {"parity": {"phi": 0, "c": 1}},
+                {"incoming_noise": {"phi": 0, "c": 0.2}},
+                {
+                    "parity": {
+                        "phi": 0,
+                        "c": 1,
+                        "assign_error_prob": 0,
+                        "decay_prob_half_meas": 0,
+                    }
+                },
             ]
         }
     )
@@ -124,8 +183,15 @@ def test_noisy_PhenNoiseModel():
     setup = Setup(
         {
             "setup": [
-                {"idle": {"phi": 0.2, "c": 0.2}},
-                {"parity": {"phi": 0.2, "c": 0.8}},
+                {"incoming_noise": {"phi": 0.2, "c": 0.2}},
+                {
+                    "parity": {
+                        "phi": 0.2,
+                        "c": 0.8,
+                        "assign_error_prob": 0.1,
+                        "decay_prob_half_meas": 0.1,
+                    }
+                },
             ]
         }
     )
@@ -145,8 +211,15 @@ def test_ideal_CircNoiseModel():
     setup = Setup(
         {
             "setup": [
-                {"idle": {"phi": 0, "c": 0.2}},
-                {"parity": {"phi": 0, "c": 1}},
+                {"incoming_noise": {"phi": 0, "c": 0.2}},
+                {
+                    "parity": {
+                        "phi": 0,
+                        "c": 1,
+                        "assign_error_prob": 0,
+                        "decay_prob_half_meas": 0,
+                    }
+                },
             ]
         }
     )
@@ -168,8 +241,15 @@ def test_noisy_CircNoiseModel():
     setup = Setup(
         {
             "setup": [
-                {"idle": {"phi": 0.2, "c": 0.2}},
-                {"parity": {"phi": 0.2, "c": 0.8}},
+                {"incoming_noise": {"phi": 0.2, "c": 0.2}},
+                {
+                    "parity": {
+                        "phi": 0.2,
+                        "c": 0.8,
+                        "assign_error_prob": 0.1,
+                        "decay_prob_half_meas": 0.1,
+                    }
+                },
             ]
         }
     )

@@ -33,7 +33,7 @@ class IncNoiseModel(Model):
             Unnormalized FGS after the (noisy) idling.
         """
         for qubit in self.data_qubits:
-            params = self.setup.param("idle", qubit)
+            params = self.setup.param("incoming_noise", qubit)
 
             state = apply_qubit_coh_noise(
                 state=state,
@@ -80,8 +80,8 @@ class ParityNoiseModel(Model):
 
             # add ancilla errors
             # The quantum measurement error happens after the measurement.
-            assign_prob = params.get("assing_prob")
-            qmeas_prob = params.get("qmeas_prob")
+            assign_prob = params.get("assign_error_prob")
+            qmeas_prob = params.get("decay_prob_half_meas")
 
             outcome = synd ^ self.anc_states[k]
             noisy_outcome = outcome ^ numba_choice([1 - assign_prob, assign_prob])
@@ -115,7 +115,7 @@ class PhenNoiseModel(Model):
             Unnormalized FGS after the (noisy) idling.
         """
         for qubit in self.data_qubits:
-            params = self.setup.param("idle", qubit)
+            params = self.setup.param("incoming_noise", qubit)
 
             state = apply_qubit_coh_noise(
                 state=state,
@@ -160,8 +160,8 @@ class PhenNoiseModel(Model):
 
             # add ancilla errors
             # The quantum measurement error happens after the measurement.
-            assign_prob = params.get("assing_prob")
-            qmeas_prob = params.get("qmeas_prob")
+            assign_prob = params.get("assign_error_prob")
+            qmeas_prob = params.get("decay_prob_half_meas")
 
             outcome = synd ^ self.anc_states[k]
             noisy_outcome = outcome ^ numba_choice([1 - assign_prob, assign_prob])
@@ -195,7 +195,7 @@ class CircNoiseModel(Model):
             Unnormalized FGS after the (noisy) idling.
         """
         for qubit in self.data_qubits:
-            params = self.setup.param("idle", qubit)
+            params = self.setup.param("incoming_noise", qubit)
 
             state = apply_qubit_coh_noise(
                 state=state,
@@ -240,8 +240,8 @@ class CircNoiseModel(Model):
 
             # add ancilla errors
             # The quantum measurement error happens after the measurement.
-            assign_prob = params.get("assing_prob")
-            qmeas_prob = params.get("qmeas_prob")
+            assign_prob = params.get("assign_error_prob")
+            qmeas_prob = params.get("decay_prob_half_meas")
 
             outcome = synd ^ self.anc_states[k]
             noisy_outcome = outcome ^ numba_choice([1 - assign_prob, assign_prob])

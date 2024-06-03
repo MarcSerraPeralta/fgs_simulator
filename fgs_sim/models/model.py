@@ -122,14 +122,19 @@ class Model:
         norm = 1
         cov = np.zeros((2 * (self.num_data + 1), 2 * (self.num_data + 1)))
 
-        # Warning: for now, we have only implemented it for b=0,...,0
-        assert not (np.array(list(bitstring.values()))).any()
+        bitstring_vec = [bool(bitstring[q]) for q in self.data_qubits]
+        parities = np.abs(np.diff(bitstring_vec))
 
-        cov[0, -1] = -1
-        cov[-1, 0] = +1
-        for i in range(self.num_data):
-            cov[2 * i + 1, 2 * i + 2] = -1
-            cov[2 * i + 2, 2 * i + 1] = +1
+        val = (-1) ** np.sum(parities)
+        cov[0, -1] = -val
+        cov[-1, 0] = +val
+        for i, p in enumerate(parities):
+            val = (-1) ** p
+            cov[2 * i + 1, 2 * i + 2] = -val
+            cov[2 * i + 2, 2 * i + 1] = +val
+        i += 1
+        cov[2 * i + 1, 2 * i + 2] = -1
+        cov[2 * i + 2, 2 * i + 1] = +1
 
         return cov, norm
 
