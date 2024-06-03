@@ -70,7 +70,7 @@ def dataset_generator(
         ),
         coords=dict(
             shot=list(range(num_samples)),
-            qec_round=list(range(num_rounds + 1)),
+            qec_round=list(range(1, num_rounds + 1 + 1)),
             anc_qubit=model.parities,
             data_qubit=model.data_qubits,
         ),

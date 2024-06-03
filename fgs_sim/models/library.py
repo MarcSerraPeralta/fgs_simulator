@@ -5,6 +5,7 @@ import numpy as np
 from .model import Model
 from .utils import (
     apply_qubit_coh_noise,
+    apply_ideal_parity,
     apply_noisy_parity,
     apply_noisy_parity_circ_level,
     numba_choice,
@@ -12,7 +13,9 @@ from .utils import (
 
 
 class IncNoiseModel(Model):
-    def idle(self, state: Tuple[np.ndarray, float]) -> Tuple[np.ndarray, float]:
+    def incoming_noise(
+        self, state: Tuple[np.ndarray, float]
+    ) -> Tuple[np.ndarray, float]:
         """
         Returns the unnormalized FGS after noisy idling given an FGS.
         For more information, read the docs of `models.utils.apply_qubit_coh_noise`.
@@ -92,7 +95,9 @@ class ParityNoiseModel(Model):
 
 
 class PhenNoiseModel(Model):
-    def idle(self, state: Tuple[np.ndarray, float]) -> Tuple[np.ndarray, float]:
+    def incoming_noise(
+        self, state: Tuple[np.ndarray, float]
+    ) -> Tuple[np.ndarray, float]:
         """
         Returns the unnormalized FGS after noisy idling given an FGS.
         For more information, read the docs of `models.utils.apply_qubit_coh_noise`.
@@ -170,7 +175,9 @@ class PhenNoiseModel(Model):
 
 
 class CircNoiseModel(Model):
-    def idle(self, state: Tuple[np.ndarray, float]) -> Tuple[np.ndarray, float]:
+    def incoming_noise(
+        self, state: Tuple[np.ndarray, float]
+    ) -> Tuple[np.ndarray, float]:
         """
         Returns the unnormalized FGS after noisy idling given an FGS.
         For more information, read the docs of `models.utils.apply_qubit_coh_noise`.
@@ -269,20 +276,22 @@ class FitNoiseModel(Model):
             param_decay = self.setup.param("decay_prob_half_meas", qubit)
             param_coh = self.setup.param("coh_phi", qubit)
 
-            state = apply_qubit_coh_noise(
-                state=state,
-                qubit_id=self.qubit_id(qubit),
-                rot_angle=param_coh,
-                coherence=1,
-                num_data=self.num_data,
-            )
-            state = apply_qubit_coh_noise(
-                state=state,
-                qubit_id=self.qubit_id(qubit),
-                rot_angle=np.arcsin(np.sqrt(param_decay)),
-                coherence=0,
-                num_data=self.num_data,
-            )
+            if param_coh != 0:
+                state = apply_qubit_coh_noise(
+                    state=state,
+                    qubit_id=self.qubit_id(qubit),
+                    rot_angle=param_coh,
+                    coherence=1,
+                    num_data=self.num_data,
+                )
+            if param_decay != 0:
+                state = apply_qubit_coh_noise(
+                    state=state,
+                    qubit_id=self.qubit_id(qubit),
+                    rot_angle=np.arcsin(np.sqrt(param_decay)),
+                    coherence=0,
+                    num_data=self.num_data,
+                )
 
         return state
 
@@ -304,18 +313,29 @@ class FitNoiseModel(Model):
             Unnormalized FGS after the (noisy) QEC round.
         """
         outcome_vector = []
-        for k, parity in enumerate(self.parities):
+
+        parities_and_idx = [(k, p) for k, p in enumerate(self.parities)]
+        ordered_parities = parities_and_idx[::2] + parities_and_idx[1::2]
+
+        for k, parity in ordered_parities:
             qubits = self.neighbours[parity]
             qubit_ids = (self.qubit_id(qubits[0]), self.qubit_id(qubits[1]))
             param_phi = self.setup.param("coh_phi", parity)
 
-            state, synd = apply_noisy_parity_circ_level(
-                state=state,
-                qubit_ids=qubit_ids,
-                rot_angle=param_phi,
-                coherence=1,
-                num_data=self.num_data,
-            )
+            if param_phi != 0:
+                state, synd = apply_noisy_parity(
+                    state=state,
+                    qubit_ids=qubit_ids,
+                    rot_angle=param_phi,
+                    coherence=1,
+                    num_data=self.num_data,
+                )
+            else:
+                state, synd = apply_ideal_parity(
+                    state=state,
+                    qubit_ids=qubit_ids,
+                    num_data=self.num_data,
+                )
 
             # add ancilla errors
             # the error channel for the ancilla measurement is:
@@ -324,6 +344,7 @@ class FitNoiseModel(Model):
             decay_prob = self.setup.param("decay_prob_half_meas", parity)
 
             self.anc_states[k] = self.anc_states[k] ^ synd
+
             if self.anc_states[k]:
                 self.anc_states[k] = self.anc_states[k] ^ numba_choice(
                     [1 - decay_prob, decay_prob]

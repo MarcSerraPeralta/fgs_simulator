@@ -55,6 +55,10 @@ class Model:
     def qubit_line(self):
         return self._qubit_line
 
+    def reset(self):
+        self.anc_states = np.zeros(len(self.parities), dtype=bool)
+        return
+
     def qubit_id(self, qubit: str) -> int:
         """
         Returns the index for the specified (data) qubit.
@@ -205,8 +209,8 @@ class Model:
                 qubit_ids=qubit_ids,
                 num_data=self.num_data,
             )
-            outcome_vector.append(synd ^ self.anc_states[k])
             self.anc_states[k] = self.anc_states[k] ^ synd
+            outcome_vector.append(self.anc_states[k])
 
         return state, np.array(outcome_vector)
 
@@ -245,8 +249,8 @@ class Model:
                 qubit_ids=qubit_ids,
                 num_data=self.num_data,
             )
-            outcome_vector.append(synd ^ self.anc_states[k])
             self.anc_states[k] = self.anc_states[k] ^ synd
+            outcome_vector.append(self.anc_states[k])
 
         return state, np.array(outcome_vector)
 
@@ -263,5 +267,23 @@ class Model:
         -------
         out_state
             FGS after the idling.
+        """
+        return state
+
+    def incoming_noise(
+        self, state: Tuple[np.ndarray, float]
+    ) -> Tuple[np.ndarray, float]:
+        """
+        Returns the state after injecting incoming noise (in this case, no noise).
+
+        Paramters
+        ---------
+        state
+            FGS before the incoming noise.
+
+        Returns
+        -------
+        out_state
+            FGS after the incoming noise.
         """
         return state
