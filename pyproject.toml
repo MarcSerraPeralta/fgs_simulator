@@ -28,5 +28,5 @@ include = ["fgs_sim", "fgs_sim.*"]  # package names should match these glob patt
 namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
 
 [project.optional-dependencies]
-dev = ["pip-tools", "pytest", "scalene"]
+dev = ["pip-tools", "pytest", "scalene", "black"]
 
