@@ -1,7 +1,0 @@
-name: "Incoming (coherent) noise model"
-description: "Incoming noise model for coherent noise simulation"
-
-setup:
-  - idle:
-      c: 1
-      phi: 0.2
