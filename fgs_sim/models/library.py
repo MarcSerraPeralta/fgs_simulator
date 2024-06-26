@@ -292,6 +292,13 @@ class FitNoiseModel(Model):
                     coherence=0,
                     num_data=self.num_data,
                 )
+                state = apply_qubit_coh_noise(
+                    state=state,
+                    qubit_id=self.qubit_id(qubit),
+                    rot_angle=np.arcsin(np.sqrt(param_decay)),
+                    coherence=0,
+                    num_data=self.num_data,
+                )
 
         return state
 
@@ -314,10 +321,9 @@ class FitNoiseModel(Model):
         """
         outcome_vector = []
 
-        parities_and_idx = [(k, p) for k, p in enumerate(self.parities)]
-        ordered_parities = parities_and_idx[::2] + parities_and_idx[1::2]
+        # THE ORDER OF THE PARITIES NEEDS TO BE THE SAME ALSO WITH THE FINAL QEC ROUND!!!
 
-        for k, parity in ordered_parities:
+        for k, parity in enumerate(self.parities):
             qubits = self.neighbours[parity]
             qubit_ids = (self.qubit_id(qubits[0]), self.qubit_id(qubits[1]))
             param_phi = self.setup.param("coh_phi", parity)
