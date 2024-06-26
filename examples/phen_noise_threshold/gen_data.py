@@ -34,8 +34,8 @@ def get_setup(prob, c):
     phi = np.arcsin(np.sqrt(prob))
     setup = {
         "setup": [
-            {"idle": {"phi": phi, "c": c}},
-            {"parity": {"phi": phi, "c": c}},
+            {"incoming_noise": {"phi": phi, "c": c}},
+            {"parity": {"phi": phi, "c": c, "assign_error_prob":0, "decay_prob_half_meas": 0}},
         ]
     }
     return setup
