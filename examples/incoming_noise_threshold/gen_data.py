@@ -32,7 +32,7 @@ def get_qubit_line(distance):
 
 def get_setup(prob, c):
     phi = np.arcsin(np.sqrt(prob))
-    setup = {"setup": [{"idle": {"phi": phi, "c": c}}]}
+    setup = {"setup": [{"incoming_noise": {"phi": phi, "c": c}}]}
     return setup
 
 
