@@ -6,11 +6,11 @@ import xarray as xr
 import stim
 from pymatching import Matching
 
-from fgs_sim.utils import get_defects
+from fgs_sim.utils import get_defects, get_syndromes
 
 ###########################
 
-DISTANCES = [5, 7, 9, 11, 13, 15]
+DISTANCES = [3, 5, 7, 9, 11, 13, 15]
 COHERENCES = [0, 1]
 PROBS = {
     0: [0.01, 0.02, 0.03, 0.04, 0.05, 0.06],
@@ -70,7 +70,7 @@ for coherence in COHERENCES:
             # mwpm.draw()
             # plt.show()
 
-            defects = get_defects(ds.syndromes)
+            defects = get_defects(get_syndromes(ds.outcomes))
             defects = defects.transpose("shot", "qec_round", "anc_qubit").values
             defect_vec = defects.reshape(NUM_SHOTS, -1)
             log_errors = ds.log_errors.transpose("shot").values
