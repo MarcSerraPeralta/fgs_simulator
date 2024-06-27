@@ -195,7 +195,7 @@ class Model:
         -------
         out_state
             Unnormalized FGS after the final QEC round.
-        synd
+        syndrome_vector
             Syndrome outcome vector measured in the final QEC round.
 
         References
@@ -204,8 +204,8 @@ class Model:
         error correction under coherent error based on the nonunitary free-fermionic formalism."
         Physical review letters 119.19 (2017): 190503.
         """
-        outcome_vector = []
-        for k, parity in enumerate(self.parities):
+        syndrome_vector = []
+        for parity in self.parities:
             qubits = self.neighbours[parity]
             qubit_ids = (self.qubit_id(qubits[0]), self.qubit_id(qubits[1]))
 
@@ -214,10 +214,9 @@ class Model:
                 qubit_ids=qubit_ids,
                 num_data=self.num_data,
             )
-            self.anc_states[k] = self.anc_states[k] ^ synd
-            outcome_vector.append(self.anc_states[k])
+            syndrome_vector.append(synd)
 
-        return state, np.array(outcome_vector)
+        return state, np.array(syndrome_vector)
 
     def qec_round(
         self, state: Tuple[np.ndarray, float]

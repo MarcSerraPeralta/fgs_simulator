@@ -300,6 +300,14 @@ class FitNoiseModel(Model):
                     num_data=self.num_data,
                 )
 
+        for k, parity in enumerate(self.parities):
+            decay_prob = self.setup.param("decay_prob_half_meas", parity)
+            if self.anc_states[k]:
+                self.anc_states[k] = self.anc_states[k] ^ numba_choice(
+                    [1 - decay_prob, decay_prob]
+                )
+
+
         return state
 
     def qec_round(self, state: Tuple[np.ndarray, float]) -> Tuple[np.ndarray, float]:
@@ -358,11 +366,6 @@ class FitNoiseModel(Model):
 
             outcome = self.anc_states[k]
             noisy_outcome = outcome ^ numba_choice([1 - assign_prob, assign_prob])
-
-            if self.anc_states[k]:
-                self.anc_states[k] = self.anc_states[k] ^ numba_choice(
-                    [1 - decay_prob, decay_prob]
-                )
 
             outcome_vector.append(noisy_outcome)
 

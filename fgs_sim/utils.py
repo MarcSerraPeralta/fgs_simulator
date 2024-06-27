@@ -44,33 +44,36 @@ def dataset_generator(
     ds
         Dataset with the syndromes and logical error posterior probabilities.
     """
-    list_syndromes = []
+    list_anc_outcomes = []
+    list_final_syndromes = []
     list_log_errors = []
     idx_percent = num_samples // 100
     for i in range(num_samples):
         if verbose and (i % idx_percent == 0):
             print(f"\r{i // idx_percent}%", end="", flush=True)
 
-        syndromes, log_errors = experiment(
+        anc_outcomes, final_syndrome, log_errors = experiment(
             model=model,
             num_rounds=num_rounds,
             data_init=data_init,
             return_prob=return_probs,
         )
 
-        list_syndromes.append(syndromes)
+        list_anc_outcomes.append(anc_outcomes)
+        list_final_syndromes.append(final_syndrome)
         list_log_errors.append(log_errors)
     print("\r100%", flush=True)
 
     ds = xr.Dataset(
         data_vars=dict(
-            outcomes=(("shot", "qec_round", "anc_qubit"), list_syndromes),
+            anc_outcomes=(("shot", "qec_round", "anc_qubit"), list_anc_outcomes),
+            final_syndromes=(("shot", "anc_qubit"), list_final_syndromes),
             log_errors=(("shot",), list_log_errors),
             data_init=(("data_qubit",), [data_init[q] for q in model.data_qubits]),
         ),
         coords=dict(
             shot=list(range(num_samples)),
-            qec_round=list(range(1, num_rounds + 1 + 1)),
+            qec_round=list(range(1, num_rounds + 1)),
             anc_qubit=model.parities,
             data_qubit=model.data_qubits,
         ),
@@ -142,6 +145,13 @@ def get_syndromes(
     syndromes = outcomes ^ shifted_out
 
     return syndromes
+
+def concat_syndromes(syndromes: xr.DataArray, final_syndromes: xr.DataArray) -> xr.DataArray:
+    """Concatenate the "bulk" syndromes and the final round syndromes. 
+    """
+    final_syndromes = final_syndromes.expand_dims(dim=dict(qec_round=[np.max(syndromes.qec_round.values) + 1]))
+    all_syndromes = xr.concat([syndromes, final_syndromes], dim="qec_round")
+    return all_syndromes
 
 
 def get_prob_log_err(predictions: np.ndarray, log_err_post: np.ndarray) -> np.ndarray:

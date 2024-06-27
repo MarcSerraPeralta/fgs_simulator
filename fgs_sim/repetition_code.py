@@ -1,4 +1,4 @@
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Union
 
 import random
 import numpy as np
@@ -12,7 +12,7 @@ def memory_experiment(
     num_rounds: int,
     data_init: Dict[str, bool],
     return_prob: bool = True,
-) -> Tuple[np.ndarray, int]:
+) -> Tuple[np.ndarray, np.ndarray, Union[int, float]]:
     """
     Returns a single sample of running the memory experiment for the
     repetition code.
@@ -46,10 +46,12 @@ def memory_experiment(
 
     Returns
     -------
-    syndrome: np.ndarray(num_rounds + 1)
-        Syndrome outcomes including the final round.
+    outcomes : np.ndarray(num_rounds)
+        Ancilla measurement outcome from the QEC cycles.
+    final_syndrome : np.ndarray
+        Syndrome outcomes for the final round.
     log_error_posterior
-        Posterior logical error probability given the observed syndromes.
+        Posterior logical error probability given the observed outcomes.
         Note that this is the average logical error probability of `data_init`
         and the oposite of `data_init`.
     """
@@ -60,25 +62,25 @@ def memory_experiment(
 
     model.reset_ancillas()
     state = model.init_qubits(data_init)
-    syndromes = []
+    outcomes = []
 
     for _ in range(num_rounds):
         state = model.incoming_noise(state)
-        state, syndrome = model.qec_round(state)
-        syndromes.append(syndrome)
+        state, outcome = model.qec_round(state)
+        outcomes.append(outcome)
         state = model.idle(state)
 
     state = model.incoming_noise(state)
-    state, syndrome = model.final_qec_round(state)
-    syndromes.append(syndrome)
+    state, final_syndrome = model.final_qec_round(state)
 
-    syndromes = np.array(syndromes)
+    outcomes = np.array(outcomes)
+    final_syndrome = np.array(final_syndrome)
     log_error_posterior = model.log_meas(state)
 
     if return_prob:
-        return syndromes, log_error_posterior
+        return outcomes, final_syndrome, log_error_posterior
 
     log_error = random.choices(
         [0, 1], weights=[1 - log_error_posterior, log_error_posterior]
     )[0]
-    return syndromes, log_error
+    return outcomes, final_syndrome, log_error
