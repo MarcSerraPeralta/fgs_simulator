@@ -69,7 +69,7 @@ def dataset_generator(
             anc_outcomes=(("shot", "qec_round", "anc_qubit"), list_anc_outcomes),
             final_syndromes=(("shot", "anc_qubit"), list_final_syndromes),
             log_errors=(("shot",), list_log_errors),
-            data_init=(("data_qubit",), [data_init[q] for q in model.data_qubits]),
+            data_init=(("data_qubit",), [int(data_init[q]) for q in model.data_qubits]),
         ),
         coords=dict(
             shot=list(range(num_samples)),
