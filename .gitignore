@@ -77,6 +77,10 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+*.ipynb
+
+# Datasets
+*.nc
 
 # IPython
 profile_default/
@@ -161,3 +165,7 @@ cython_debug/
 
 # Annoying macOS files
 .DS_Store
+
+# Other files
+*.pdf
+*.svg
