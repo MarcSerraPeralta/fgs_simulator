@@ -35,7 +35,14 @@ def get_setup(prob, c):
     setup = {
         "setup": [
             {"incoming_noise": {"phi": phi, "c": c}},
-            {"parity": {"phi": phi, "c": c, "assign_error_prob":0, "decay_prob_half_meas": 0}},
+            {
+                "parity": {
+                    "phi": phi,
+                    "c": c,
+                    "assign_error_prob": 0,
+                    "decay_prob_half_meas": 0,
+                }
+            },
         ]
     }
     return setup
@@ -57,7 +64,8 @@ for coherence in COHERENCES:
             num_rounds = distance - 1
             model = PhenNoiseModel(setup, qubit_line=qubit_line)
             output_name = (
-                EXP_NAME / f"d{distance}_p{prob:0.3f}_c{coherence}_probs{USE_PROBS}_n{NUM_SHOTS}.nc"
+                EXP_NAME
+                / f"d{distance}_p{prob:0.3f}_c{coherence}_probs{USE_PROBS}_n{NUM_SHOTS}.nc"
             )
 
             if output_name.exists():

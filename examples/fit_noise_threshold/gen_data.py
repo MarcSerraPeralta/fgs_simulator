@@ -12,7 +12,7 @@ from fgs_sim.utils import dataset_generator
 
 DISTANCES = [3, 5, 7, 9]
 COHERENCES = [0, 1]
-PROBS = [0.005, 0.01, 0.02, 0.05] 
+PROBS = [0.005, 0.01, 0.02, 0.05]
 NUM_SHOTS = 50_000
 USE_PROBS = True
 
@@ -41,6 +41,7 @@ def get_setup(prob, c):
         ]
     }
     return setup
+
 
 def get_data_init(qubit_line):
     data_qubits = [q for q in qubit_line if "D" in q]

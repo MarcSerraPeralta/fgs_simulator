@@ -1,8 +1,9 @@
+from collections.abc import Iterable
 from typing import List, Dict, Tuple
 
 import numpy as np
 
-from .utils import apply_ideal_parity
+from .utils import apply_ideal_parity, apply_qubit_coh_noise
 
 
 class Model:
@@ -290,4 +291,51 @@ class Model:
         out_state
             FGS after the incoming noise.
         """
+        return state
+
+    def inject_x_errors(self, state: Tuple[np.ndarray, float], qubits: Iterable[str]):
+        """
+        Returns the state after injecting Pauli X errors to the
+        specified qubits (both data and ancilla).
+
+        Parameters
+        ----------
+        state
+            FGS before the injected Pauli X errors.
+        qubits
+            List of qubit labels to which inject Pauli X errors.
+
+        Returns
+        -------
+        out_state
+            FGS after the X errors.
+        """
+        if not isinstance(qubits, Iterable):
+            raise TypeError(f"'qubits' must be iterable, but {type(qubits)} was given.")
+        if any(not isinstance(q, str) for q in qubits):
+            raise TypeError(f"'qubits' must be an interable of strings.")
+        qubits = set(qubits)
+        if set(self._qubit_line) < qubits:
+            raise ValueError(
+                "Not all specified qubits are present in this model."
+                f"Qubits in model: {self._qubit_line}\nGiven qubits: {qubits}"
+            )
+
+        # Inject X errors to data qubits
+        inj_data_qubits = qubits.intersection(self.data_qubits)
+        for qubit in inj_data_qubits:
+            state = apply_qubit_coh_noise(
+                state=state,
+                qubit_id=self.qubit_id(qubit),
+                rot_angle=np.pi / 2,
+                coherence=0,
+                num_data=self.num_data,
+            )
+
+        # Inject X errors to the ancilla qubits
+        for k, parity in enumerate(self.parities):
+            if parity not in qubits:
+                continue
+            self.anc_states[k] ^= 1
+
         return state
