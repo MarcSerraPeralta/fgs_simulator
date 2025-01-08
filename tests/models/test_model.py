@@ -57,14 +57,21 @@ def test_inject_x_errors():
 
     model.reset_ancillas()
     state = model.init_qubits(data_init)
-    model.inject_x_errors(state, ["D1", "D2", "D3"])
+    state = model.inject_x_errors(state, ["D1", "D2", "D3"])
     state, outcome = model.qec_round(state)
 
     assert (outcome == 0).all()
 
     model.reset_ancillas()
     state = model.init_qubits(data_init)
-    model.inject_x_errors(state, ["A1"])
+    state = model.inject_x_errors(state, ["D2"])
+    state, outcome = model.qec_round(state)
+
+    assert (outcome == 1).all()
+
+    model.reset_ancillas()
+    state = model.init_qubits(data_init)
+    state = model.inject_x_errors(state, ["A1"])
     state, outcome = model.qec_round(state)
 
     assert outcome[0] == 1
