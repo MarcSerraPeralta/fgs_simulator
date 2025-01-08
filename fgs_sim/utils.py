@@ -146,10 +146,14 @@ def get_syndromes(
 
     return syndromes
 
-def concat_syndromes(syndromes: xr.DataArray, final_syndromes: xr.DataArray) -> xr.DataArray:
-    """Concatenate the "bulk" syndromes and the final round syndromes. 
-    """
-    final_syndromes = final_syndromes.expand_dims(dim=dict(qec_round=[np.max(syndromes.qec_round.values) + 1]))
+
+def concat_syndromes(
+    syndromes: xr.DataArray, final_syndromes: xr.DataArray
+) -> xr.DataArray:
+    """Concatenate the "bulk" syndromes and the final round syndromes."""
+    final_syndromes = final_syndromes.expand_dims(
+        dim=dict(qec_round=[np.max(syndromes.qec_round.values) + 1])
+    )
     all_syndromes = xr.concat([syndromes, final_syndromes], dim="qec_round")
     return all_syndromes
 

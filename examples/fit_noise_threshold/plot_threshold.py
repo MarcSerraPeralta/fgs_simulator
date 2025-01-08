@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 DISTANCES = [3, 5, 7, 9]
 COHERENCES = [0, 1]
-PROBS = [0.005, 0.01, 0.02, 0.05] 
+PROBS = [0.005, 0.01, 0.02, 0.05]
 NUM_SHOTS = 50_000
 USE_PROBS = True
 
@@ -32,7 +32,8 @@ for distance in DISTANCES:
 
         for prob in PROBS:
             ds = xr.load_dataset(
-                OUTPUT_NAME / f"d{distance}_p{prob:0.3f}_c{coherence}_probs{USE_PROBS}_n{NUM_SHOTS}.nc"
+                OUTPUT_NAME
+                / f"d{distance}_p{prob:0.3f}_c{coherence}_probs{USE_PROBS}_n{NUM_SHOTS}.nc"
             )
             data = ds.log_flip_prob.values
             y_values.append(np.average(data))

@@ -32,7 +32,8 @@ for distance in DISTANCES:
 
         for prob in PROBS:
             ds = xr.load_dataset(
-                OUTPUT_NAME / f"d{distance}_p{prob:0.3f}_c{coherence}_probs{USE_PROBS}_n{NUM_SHOTS}.nc"
+                OUTPUT_NAME
+                / f"d{distance}_p{prob:0.3f}_c{coherence}_probs{USE_PROBS}_n{NUM_SHOTS}.nc"
             )
             data = ds.log_flip_prob.values
             y_values.append(np.average(data))

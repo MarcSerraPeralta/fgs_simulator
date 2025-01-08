@@ -307,7 +307,6 @@ class FitNoiseModel(Model):
                     [1 - decay_prob, decay_prob]
                 )
 
-
         return state
 
     def qec_round(self, state: Tuple[np.ndarray, float]) -> Tuple[np.ndarray, float]:

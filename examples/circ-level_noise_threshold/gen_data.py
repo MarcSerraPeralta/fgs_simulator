@@ -37,7 +37,14 @@ def get_setup(prob, c):
     setup = {
         "setup": [
             {"incoming_noise": {"phi": phi, "c": c}},
-            {"parity": {"phi": phi, "c": c, "assign_error_prob": 0, "decay_prob_half_meas": 0}},
+            {
+                "parity": {
+                    "phi": phi,
+                    "c": c,
+                    "assign_error_prob": 0,
+                    "decay_prob_half_meas": 0,
+                }
+            },
         ]
     }
     return setup
