@@ -307,7 +307,7 @@ class Model:
 
         Returns
         -------
-        out_state
+        state
             FGS after the X errors.
         """
         if not isinstance(qubits, Iterable):

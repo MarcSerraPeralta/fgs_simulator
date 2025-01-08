@@ -9,7 +9,9 @@ def test_model():
     data_init = {"D1": 0, "D2": 0, "D3": 0}
     num_rounds = 10
 
-    outcomes, final_syndrome, log_error_posterior = memory_experiment(model, num_rounds, data_init)
+    outcomes, final_syndrome, log_error_posterior = memory_experiment(
+        model, num_rounds, data_init
+    )
 
     assert (outcomes == 0).all()
     assert (final_syndrome == 0).all()
@@ -23,7 +25,9 @@ def test_init_bistring():
     data_init = {"D1": 0, "D2": 1, "D3": 0}
     num_rounds = 3
 
-    outcomes, final_syndrome, log_error_posterior = memory_experiment(model, num_rounds, data_init)
+    outcomes, final_syndrome, log_error_posterior = memory_experiment(
+        model, num_rounds, data_init
+    )
 
     # no-reset after the ancilla measurement
     assert (outcomes[0] == 1).all()
@@ -34,7 +38,9 @@ def test_init_bistring():
     data_init = {"D1": 0, "D2": 1, "D3": 1}
     num_rounds = 3
 
-    outcomes, final_syndrome, log_error_posterior = memory_experiment(model, num_rounds, data_init)
+    outcomes, final_syndrome, log_error_posterior = memory_experiment(
+        model, num_rounds, data_init
+    )
 
     # no-reset after the ancilla measurement
     assert (outcomes[0] == np.array([True, False])).all()
@@ -43,6 +49,7 @@ def test_init_bistring():
     assert np.allclose(log_error_posterior, 0)
 
     return
+
 
 def test_inject_x_errors():
     model = Model(None, qubit_line=["D1", "A1", "D2", "A2", "D3"])
