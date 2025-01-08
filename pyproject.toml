@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+requires-python = ">=3.8.12"
+name = "fgs_sim"
+description = "Non-unitary free-fermionic simulator for Quantum Error Correction (QEC) codes under coherent errors" 
+version = "0.1.0"
+authors = [
+    { name = "Marc Serra Peralta", email = "marcserraperalta@gmail.com" }
+]
+maintainers = [
+    { name = "Marc Serra Peralta", email = "marcserraperalta@gmail.com" }
+]
+license = {file = "LICENSE"}
+readme = "README.md"
+dependencies = [
+    "numpy",
+    "pyyaml",
+    "xarray",
+    "scipy",
+    "numba",
+]
+keywords = ["fermion", "fgs", "fgo", "simulator", "qec"]
+
+[tool.setuptools.packages.find]
+include = ["fgs_sim", "fgs_sim.*"]  # package names should match these glob patterns (["*"] by default)
+namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
+
+[project.optional-dependencies]
+dev = ["pip-tools", "pytest", "scalene", "black"]
+

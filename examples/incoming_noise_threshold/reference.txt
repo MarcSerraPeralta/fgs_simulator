@@ -1,0 +1,2 @@
+Figure 7 of reference "Introduction to quantum error correction and fault tolerance" (SciPost Phys. Lect. Notes 70 (2023)) for the twirled noise. 
+For the coherent noise, it can be shown that the incoming noise is converted to stochastic noise with the corresponding probabilities by projecting the data-qubit state with the parity checks. 

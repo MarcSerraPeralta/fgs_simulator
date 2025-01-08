@@ -1,0 +1,55 @@
+BENCHMARK:
+IncNoiseModel
+1000 samples
+50 num_rounds
+
+====================
+COMPILED WITH CYTHON + RANDOM.CHOICES + STORE KRAUS
+====================
+real	0m18.501s
+user	0m43.429s
+sys	2m17.809s
+
+====================
+PYTHON + RANDOM.CHOICES + STORE KRAUS
+====================
+real	0m21.139s
+user	0m50.647s
+sys	2m34.379s
+
+====================
+WITH NUMBA ACTIVATE IN CORE&KRAUS + RANDOM.CHOICES + STORE KRAUS
+====================
+real	0m6.345s
+user	0m6.344s
+sys	0m0.693s
+
+====================
+WITH NUMBA ACTIVATED IN CORE&KRAUS + RANDOM.CHOICES
+====================
+real	0m7.888s
+user	0m8.173s
+sys	0m1.212s
+
+====================
+WITH NUMBA ACTIVATED IN CORE AND KRAUS
+====================
+real	0m8.389s
+user	0m8.600s
+sys	0m2.155s
+
+====================
+WITH NUMBA ACTIVATED IN CORE
+====================
+real	0m10.363s
+user	0m10.590s
+sys	0m1.874s
+
+======================
+WITH NUMBA DEACTIVATED
+======================
+real	0m37.495s
+user	1m48.228s
+sys	4m0.573s
+
+

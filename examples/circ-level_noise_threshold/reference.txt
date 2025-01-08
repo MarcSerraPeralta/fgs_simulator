@@ -1,0 +1,8 @@
+These results have been compared with:
+"Suzuki, Yasunari, Keisuke Fujii, and Masato Koashi. "Efficient simulation of quantum
+error correction under coherent error based on the nonunitary free-fermionic formalism."
+Physical review letters 119.19 (2017): 190503."
+
+The circuit-level noise results are shown in Fig. 2 (bottom). 
+Note that in our `repetition_code` experiment, we add noise before the final round, but the reference does not. 
+This explains the slight difference in performance for the low-distance codes. 
