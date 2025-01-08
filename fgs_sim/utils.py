@@ -50,7 +50,7 @@ def dataset_generator(
     list_anc_outcomes = []
     list_final_syndromes = []
     list_log_errors = []
-    idx_percent = num_samples // 100
+    idx_percent = num_samples // 100 if num_samples >= 100 else 1
     for i in range(num_samples):
         if verbose and (i % idx_percent == 0):
             print(f"\r{i // idx_percent}%", end="", flush=True)
