@@ -1,4 +1,4 @@
-from typing import Dict
+from collections.abc import Callable
 
 import numpy as np
 import xarray as xr
@@ -7,13 +7,14 @@ from .models import Model
 
 
 def dataset_generator(
-    experiment: callable,
+    experiment: Callable,
     model: Model,
     num_rounds: int,
-    data_init: Dict[str, bool],
+    data_init: dict[str, bool],
     num_samples: int,
     return_probs: bool = True,
     verbose: bool = True,
+    **kargs,
 ):
     """
     Samples the experiment `num_samples` times and returns the results in
@@ -38,6 +39,8 @@ def dataset_generator(
     verbose
         If True, prints status bar of the dataset generation.
         Default: True.
+    **kargs
+        Extra arguments for `experiment`.
 
     Returns
     -------
@@ -57,6 +60,7 @@ def dataset_generator(
             num_rounds=num_rounds,
             data_init=data_init,
             return_prob=return_probs,
+            **kargs,
         )
 
         list_anc_outcomes.append(anc_outcomes)
