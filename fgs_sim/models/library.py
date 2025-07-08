@@ -372,6 +372,22 @@ class FitNoiseModel(Model):
         return state, np.array(outcome_vector)
 
 
+PARAM_NAMES_EXPCIRCNOISE = [
+    "parity_phi_decay",
+    "parity_coh_decay",
+    "parity_phi_cnot",
+    "parity_coh_cnot",
+    "os00_0",
+    "os10_0",
+    "os01_0",
+    "os11_0",
+    "os00_1",
+    "os10_1",
+    "os01_1",
+    "os11_1",
+]
+
+
 class ExpCircNoiseModel(Model):
     def qec_round(self, state: Tuple[np.ndarray, float]) -> Tuple[np.ndarray, float]:
         """
@@ -394,22 +410,24 @@ class ExpCircNoiseModel(Model):
         for k, parity in enumerate(self.parities):
             qubits = self.neighbours[parity]
             qubit_ids = (self.qubit_id(qubits[0]), self.qubit_id(qubits[1]))
-            params = self.setup.param("parity", parity)
+            params = {n: self.setup.param(n, parity) for n in PARAM_NAMES_EXPCIRCNOISE}
             meas_params = [(k, v) for k, v in params.items() if k[:2] == "os"]
 
             state, synd = apply_noisy_parity_exp_circ_level(
                 state=state,
                 qubit_ids=qubit_ids,
                 rot_angle_decay=params["parity_phi_decay"],
-                coherence_decay=params["parity_c_decay"],
+                coherence_decay=params["parity_coh_decay"],
                 rot_angle_cnot=params["parity_phi_cnot"],
-                coherence_cnot=params["parity_c_cnot"],
+                coherence_cnot=params["parity_coh_cnot"],
                 num_data=self.num_data,
             )
 
             # add ancilla measurement errors
             anc_state = self.anc_states[k] ^ synd
-            ind = numba_choice([m[1] for m in meas_params if m[0][-1] == anc_state])
+            ind = numba_choice(
+                [m[1] for m in meas_params if int(m[0][-1]) == anc_state]
+            )
             outcome, anc_state = map(int, meas_params[ind][0][2:4])  # e.g. "os01_0"
 
             self.anc_states[k] = anc_state
@@ -417,13 +435,14 @@ class ExpCircNoiseModel(Model):
 
         # incoming errors for next round
         for qubit in self.data_qubits:
-            params = self.setup.param("incoming_noise", qubit)
+            c = self.setup.param("incoming_noise_coh", qubit)
+            phi = self.setup.param("incoming_noise_phi", qubit)
 
             state = apply_qubit_coh_noise(
                 state=state,
                 qubit_id=self.qubit_id(qubit),
-                rot_angle=params["phi"],
-                coherence=params["c"],
+                rot_angle=phi,
+                coherence=c,
                 num_data=self.num_data,
             )
 

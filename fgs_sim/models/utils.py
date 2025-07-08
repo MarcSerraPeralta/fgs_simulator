@@ -458,7 +458,12 @@ def apply_noisy_parity_exp_circ_level(
     num_maps = 2 + numba_choice([2 / 3, 1 / 3]) + numba_choice([2 / 3, 1 / 3])
     list_k_cnot = np.arange(-num_maps, num_maps + 1, 2, dtype=np.int32)
     list_synd, list_k_decay = [0, 1], [+1, -1]
-    combinations = tuple(product(list_k_cnot, list_k_decay, list_synd))
+    # combinations = tuple(product(list_k_cnot, list_k_decay, list_synd)) #njit error
+    combinations = []
+    for c in list_k_cnot:
+        for d in list_k_decay:
+            for s in list_synd:
+                combinations.append((c, d, s))
 
     # get probabilities for the parity kraus operators
     probs = []
@@ -489,7 +494,7 @@ def apply_noisy_parity_exp_circ_level(
     phi = k_cnot * rot_angle_cnot + k_decay * rot_angle_decay
     c = (
         0.5
-        * comb(num_maps, (num_maps - k) // 2)
+        * comb(num_maps, (num_maps - k_cnot) // 2)
         * 0.5**num_maps
         * (1 + coherence_cnot) ** ((num_maps - k_cnot) // 2)
         * (1 - coherence_cnot) ** ((num_maps + k_cnot) // 2)

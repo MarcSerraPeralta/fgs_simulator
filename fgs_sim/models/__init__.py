@@ -5,6 +5,7 @@ from .library import (
     PhenNoiseModel,
     CircNoiseModel,
     FitNoiseModel,
+    ExpCircNoiseModel,
 )
 from .setup import Setup
 from . import kraus, utils
@@ -14,7 +15,9 @@ __all__ = [
     "IncNoiseModel",
     "ParityNoiseModel",
     "PhenNoiseModel",
+    "CircNoiseModel",
     "FitNoiseModel",
+    "ExpCircNoiseModel",
     "kraus",
     "utils",
     "Setup",
