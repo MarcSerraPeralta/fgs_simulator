@@ -8,6 +8,7 @@ from .utils import (
     apply_ideal_parity,
     apply_noisy_parity,
     apply_noisy_parity_circ_level,
+    apply_noisy_parity_exp_circ_level,
     numba_choice,
 )
 
@@ -367,5 +368,63 @@ class FitNoiseModel(Model):
             noisy_outcome = outcome ^ numba_choice([1 - assign_prob, assign_prob])
 
             outcome_vector.append(noisy_outcome)
+
+        return state, np.array(outcome_vector)
+
+
+class ExpCircNoiseModel(Model):
+    def qec_round(self, state: Tuple[np.ndarray, float]) -> Tuple[np.ndarray, float]:
+        """
+        Returns the unnormalized FGS after noisy QEC round given an FGS.
+        For more information, read the docs of `models.utils.apply_noisy_parity`.
+
+        FGS = Fermionic Gaussian State
+
+        Paramters
+        ---------
+        state
+            Unnormalized FGS before the (noisy) QEC round.
+
+        Returns
+        -------
+        out_state
+            Unnormalized FGS after the (noisy) QEC round.
+        """
+        outcome_vector = []
+        for k, parity in enumerate(self.parities):
+            qubits = self.neighbours[parity]
+            qubit_ids = (self.qubit_id(qubits[0]), self.qubit_id(qubits[1]))
+            params = self.setup.param("parity", parity)
+            meas_params = [(k, v) for k, v in params.items() if k[:2] == "os"]
+
+            state, synd = apply_noisy_parity_exp_circ_level(
+                state=state,
+                qubit_ids=qubit_ids,
+                rot_angle_decay=params["parity_phi_decay"],
+                coherence_decay=params["parity_c_decay"],
+                rot_angle_cnot=params["parity_phi_cnot"],
+                coherence_cnot=params["parity_c_cnot"],
+                num_data=self.num_data,
+            )
+
+            # add ancilla measurement errors
+            anc_state = self.anc_states[k] ^ synd
+            ind = numba_choice([m[1] for m in meas_params if m[0][-1] == anc_state])
+            outcome, anc_state = map(int, meas_params[ind][0][2:4])  # e.g. "os01_0"
+
+            self.anc_states[k] = anc_state
+            outcome_vector.append(outcome)
+
+        # incoming errors for next round
+        for qubit in self.data_qubits:
+            params = self.setup.param("incoming_noise", qubit)
+
+            state = apply_qubit_coh_noise(
+                state=state,
+                qubit_id=self.qubit_id(qubit),
+                rot_angle=params["phi"],
+                coherence=params["c"],
+                num_data=self.num_data,
+            )
 
         return state, np.array(outcome_vector)

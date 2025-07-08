@@ -385,6 +385,149 @@ def apply_noisy_parity_circ_level(
     return state, synd
 
 
+@nb.njit()
+def apply_noisy_parity_exp_circ_level(
+    state: Tuple[np.ndarray, float],
+    qubit_ids: Tuple[int, int],
+    rot_angle_decay: float,
+    coherence_decay: float,
+    rot_angle_cnot: float,
+    coherence_cnot: float,
+    num_data: int,
+) -> Tuple[Tuple[np.ndarray, float], bool]:
+    """
+    Applies `noisy_parity` operation to the given (unnormalized) FGS.
+
+    The algorithm is based on Ref. [1].
+    Note that the Kraus operators are applied with a given probability
+    because the whole FGM is not Gaussian.
+
+    FGS = Fermionic Gaussian State
+    FGM = Fermionic Gaussian Map
+
+    Parameters
+    ----------
+    state
+        Unnormalized FGS before the `noisy_parity` operation.
+    qubit_ids
+        Indexes of the qubits to which apply the `noisy_parity`.
+        These values are used to create the Kraus operators.
+    rot_angle
+        Rotation angle of the `noisy_parity` operation.
+        It corresponds to $\\phi$ in Ref. [1].
+    coherence
+        Coherence of the noise in the `noisy_parity` operation.
+        It corresponds to $c$ in Ref. [1].
+    num_data
+        Total number of data qubits to simulate.
+        Note: it does not include the extra qubit that it is added
+        for the logical measurement to be a FGM.
+
+    Returns
+    -------
+    out_state
+        Unnormalized FGS after the `noisy_parity` operation.
+    synd
+        Syndrome outcome of the `noisy_parity` operation.
+
+    References
+    ----------
+    [1] Suzuki, Yasunari, Keisuke Fujii, and Masato Koashi. "Efficient simulation of quantum
+    error correction under coherent error based on the nonunitary free-fermionic formalism."
+    Physical review letters 119.19 (2017): 190503.
+    """
+    # apply noise due to circ-level noise in CNOTs
+    if numba_choice([2 / 3, 1 / 3]) == 1:
+        state = apply_qubit_coh_noise(
+            state=state,
+            qubit_id=qubit_ids[0],
+            rot_angle=rot_angle_cnot,
+            coherence=coherence_cnot,
+            num_data=num_data,
+        )
+    if numba_choice([2 / 3, 1 / 3]) == 1:
+        state = apply_qubit_coh_noise(
+            state=state,
+            qubit_id=qubit_ids[1],
+            rot_angle=rot_angle_cnot,
+            coherence=coherence_cnot,
+            num_data=num_data,
+        )
+
+    # compute N for the parity check noise and the combinations
+    num_maps = 2 + numba_choice([2 / 3, 1 / 3]) + numba_choice([2 / 3, 1 / 3])
+    list_k_cnot = np.arange(-num_maps, num_maps + 1, 2, dtype=np.int32)
+    list_synd, list_k_decay = [0, 1], [+1, -1]
+    combinations = tuple(product(list_k_cnot, list_k_decay, list_synd))
+
+    # get probabilities for the parity kraus operators
+    probs = []
+    for k_cnot, k_decay, synd in combinations[:-1]:
+        kraus = noisy_parity(
+            qubit_ids=qubit_ids,
+            synd=synd,
+            phi=k_cnot * rot_angle_cnot + k_decay * rot_angle_decay,
+            num_qubits=num_data + 1,
+        )
+        c = (
+            0.5
+            * comb(num_maps, (num_maps - k_cnot) // 2)
+            * 0.5**num_maps
+            * (1 + coherence_cnot) ** ((num_maps - k_cnot) // 2)
+            * (1 - coherence_cnot) ** ((num_maps + k_cnot) // 2)
+            * (1 + coherence_decay) ** ((2 - k_decay) // 2)
+            * (1 - coherence_decay) ** ((2 + k_decay) // 2)
+        )
+        prob = get_prob_kraus(state, (*kraus, c))
+        probs.append(prob)
+    probs.append(1 - sum(probs))
+
+    # sample syndrome from probabilities
+    index = numba_choice(probs)
+    k_cnot, k_decay, synd = combinations[index]
+
+    phi = k_cnot * rot_angle_cnot + k_decay * rot_angle_decay
+    c = (
+        0.5
+        * comb(num_maps, (num_maps - k) // 2)
+        * 0.5**num_maps
+        * (1 + coherence_cnot) ** ((num_maps - k_cnot) // 2)
+        * (1 - coherence_cnot) ** ((num_maps + k_cnot) // 2)
+        * (1 + coherence_decay) ** ((2 - k_decay) // 2)
+        * (1 - coherence_decay) ** ((2 + k_decay) // 2)
+    )
+
+    # apply corresponding Kraus operator based on the measured syndrome
+    kraus = noisy_parity(
+        qubit_ids=qubit_ids,
+        synd=synd,
+        phi=phi,
+        num_qubits=num_data + 1,
+    )
+
+    state = apply_op(state, (*kraus, c))
+
+    # apply noise due to circ-level noise in CNOTs
+    if numba_choice([2 / 3, 1 / 3]) == 1:
+        state = apply_qubit_coh_noise(
+            state=state,
+            qubit_id=qubit_ids[0],
+            rot_angle=rot_angle_cnot,
+            coherence=coherence_cnot,
+            num_data=num_data,
+        )
+    if numba_choice([2 / 3, 1 / 3]) == 1:
+        state = apply_qubit_coh_noise(
+            state=state,
+            qubit_id=qubit_ids[1],
+            rot_angle=rot_angle_cnot,
+            coherence=coherence_cnot,
+            num_data=num_data,
+        )
+
+    return state, synd
+
+
 @nb.njit
 def numba_choice(probs):
     # Pick random weight value
