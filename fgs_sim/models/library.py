@@ -34,13 +34,15 @@ class IncNoiseModel(Model):
             Unnormalized FGS after the (noisy) idling.
         """
         for qubit in self.data_qubits:
-            params = self.setup.param("incoming_noise", qubit)
+            # params = self.setup.param("incoming_noise", qubit)
 
             state = apply_qubit_coh_noise(
                 state=state,
                 qubit_id=self.qubit_id(qubit),
-                rot_angle=params["phi"],
-                coherence=params["c"],
+                rot_angle=self.setup.param("incoming_noise_phi", qubit),
+                coherence=self.setup.param("incoming_noise_c", qubit),
+                # rot_angle=params["phi"],
+                # coherence=params["c"],
                 num_data=self.num_data,
             )
 
@@ -116,13 +118,15 @@ class PhenNoiseModel(Model):
             Unnormalized FGS after the (noisy) idling.
         """
         for qubit in self.data_qubits:
-            params = self.setup.param("incoming_noise", qubit)
+            #params = self.setup.param("incoming_noise", qubit)
 
             state = apply_qubit_coh_noise(
                 state=state,
                 qubit_id=self.qubit_id(qubit),
-                rot_angle=params["phi"],
-                coherence=params["c"],
+                rot_angle=self.setup.param("incoming_noise_phi", qubit),
+                coherence=self.setup.param("incoming_noise_c", qubit),
+                #rot_angle=params["phi"],
+                #coherence=params["c"],
                 num_data=self.num_data,
             )
 
@@ -149,20 +153,22 @@ class PhenNoiseModel(Model):
         for k, parity in enumerate(self.parities):
             qubits = self.neighbours[parity]
             qubit_ids = (self.qubit_id(qubits[0]), self.qubit_id(qubits[1]))
-            params = self.setup.param("parity", parity)
+            #params = self.setup.param("parity", parity)
 
             state, synd = apply_noisy_parity(
                 state=state,
                 qubit_ids=qubit_ids,
-                rot_angle=params["phi"],
-                coherence=params["c"],
+                #rot_angle=params["phi"],
+                #coherence=params["c"],
+                rot_angle=self.setup.param("parity_phi", parity),
+                coherence=self.setup.param("parity_c", parity),
                 num_data=self.num_data,
             )
 
             # add ancilla errors
             # The quantum measurement error happens after the measurement.
-            assign_prob = params.get("assign_error_prob")
-            qmeas_prob = params.get("decay_prob_half_meas")
+            assign_prob = self.setup.param("assign_error_prob", parity)
+            qmeas_prob = self.setup.param("decay_prob_half_meas", parity)
 
             outcome = synd ^ self.anc_states[k]
             noisy_outcome = outcome ^ numba_choice([1 - assign_prob, assign_prob])
@@ -196,13 +202,15 @@ class CircNoiseModel(Model):
             Unnormalized FGS after the (noisy) idling.
         """
         for qubit in self.data_qubits:
-            params = self.setup.param("incoming_noise", qubit)
+            #params = self.setup.param("incoming_noise", qubit)
 
             state = apply_qubit_coh_noise(
                 state=state,
                 qubit_id=self.qubit_id(qubit),
-                rot_angle=params["phi"],
-                coherence=params["c"],
+                rot_angle=self.setup.param("incoming_noise_phi", qubit),
+                coherence=self.setup.param("incoming_noise_c", qubit),
+                #rot_angle=params["phi"],
+                #coherence=params["c"],
                 num_data=self.num_data,
             )
 
@@ -229,20 +237,22 @@ class CircNoiseModel(Model):
         for k, parity in enumerate(self.parities):
             qubits = self.neighbours[parity]
             qubit_ids = (self.qubit_id(qubits[0]), self.qubit_id(qubits[1]))
-            params = self.setup.param("parity", parity)
+            #params = self.setup.param("parity", parity)
 
             state, synd = apply_noisy_parity_circ_level(
                 state=state,
                 qubit_ids=qubit_ids,
-                rot_angle=params["phi"],
-                coherence=params["c"],
+                #rot_angle=params["phi"],
+                #coherence=params["c"],
+                rot_angle=self.setup.param("parity_phi", parity),
+                coherence=self.setup.param("parity_c", parity),
                 num_data=self.num_data,
             )
 
             # add ancilla errors
             # The quantum measurement error happens after the measurement.
-            assign_prob = params.get("assign_error_prob")
-            qmeas_prob = params.get("decay_prob_half_meas")
+            assign_prob = self.setup.param("assign_error_prob", parity)
+            qmeas_prob = self.setup.param("decay_prob_half_meas", parity)
 
             outcome = synd ^ self.anc_states[k]
             noisy_outcome = outcome ^ numba_choice([1 - assign_prob, assign_prob])
